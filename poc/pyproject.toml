@@ -1,0 +1,14 @@
+[project]
+name = "s3tables-dt-poc"
+version = "0.1.0"
+description = "Dynatrace x S3 Tables POC — airline on-time data lake"
+requires-python = ">=3.11"
+dependencies = [
+    "pyiceberg[pyarrow]==0.12.0",
+    "boto3==1.43.107",
+    "requests==2.34.2",
+    "pandas==3.0.6",
+]
+
+[tool.uv]
+package = false

@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Standalone CloudWatch Metric Stream for Amazon S3 Tables to Dynatrace.
+  Based on Dynatrace's official awsmetricstreaming CloudFormation template.
+
+Parameters:
+  DynatraceEnvironmentUrl:
+    Type: String
+    Default: https://hgd83841.live.dynatrace.com
+  DynatraceTokenSecretArn:
+    Type: String
+    Description: ARN of a Secrets Manager secret containing a metrics.ingest token.
+  FirehoseHttpDeliveryEndpoint:
+    Type: String
+    Default: https://aws.cloud.dynatrace.com/metrics
+    AllowedValues:
+      - https://aws.cloud.dynatrace.com/metrics
+      - https://us.aws.cloud.dynatrace.com/metrics
+      - https://eu.aws.cloud.dynatrace.com/metrics
+
+Resources:
+  FailedDataBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireFailedRecords
+            ExpirationInDays: 30
+            Status: Enabled
+      Tags:
+        - { Key: Owner, Value: mimjasov }
+        - { Key: Project, Value: s3tables-dt-poc }
+
+  FirehoseRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: s3tables-dt-firehose-role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: firehose.amazonaws.com }
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref AWS::AccountId
+      Policies:
+        - PolicyName: s3tables-dt-firehose-delivery
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:AbortMultipartUpload
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                Resource: !GetAtt FailedDataBucket.Arn
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub "${FailedDataBucket.Arn}/failed/*"
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref DynatraceTokenSecretArn
+
+  FirehoseMetricStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: s3tables-to-dynatrace
+      DeliveryStreamType: DirectPut
+      HttpEndpointDestinationConfiguration:
+        BufferingHints:
+          IntervalInSeconds: 60
+          SizeInMBs: 3
+        EndpointConfiguration:
+          Name: Dynatrace S3 Tables metrics
+          Url: !Ref FirehoseHttpDeliveryEndpoint
+        SecretsManagerConfiguration:
+          Enabled: true
+          RoleARN: !GetAtt FirehoseRole.Arn
+          SecretARN: !Ref DynatraceTokenSecretArn
+        RequestConfiguration:
+          CommonAttributes:
+            - AttributeName: dt-url
+              AttributeValue: !Ref DynatraceEnvironmentUrl
+            - AttributeName: require-valid-certificate
+              AttributeValue: "true"
+          ContentEncoding: GZIP
+        RetryOptions:
+          DurationInSeconds: 900
+        RoleARN: !GetAtt FirehoseRole.Arn
+        S3BackupMode: FailedDataOnly
+        S3Configuration:
+          BucketARN: !GetAtt FailedDataBucket.Arn
+          Prefix: failed/
+          ErrorOutputPrefix: errors/!{firehose:error-output-type}/
+          RoleARN: !GetAtt FirehoseRole.Arn
+      Tags:
+        - { Key: Owner, Value: mimjasov }
+        - { Key: Project, Value: s3tables-dt-poc }
+
+  MetricStreamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: s3tables-dt-metric-stream-role
+      Description: Sends AWS/S3/Tables metric stream records to the dedicated Firehose.
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: streams.metrics.cloudwatch.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: put-s3tables-metrics-to-firehose
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - firehose:PutRecord
+                  - firehose:PutRecordBatch
+                Resource: !GetAtt FirehoseMetricStream.Arn
+
+  MetricStream:
+    Type: AWS::CloudWatch::MetricStream
+    Properties:
+      Name: s3tables-to-dynatrace
+      FirehoseArn: !GetAtt FirehoseMetricStream.Arn
+      RoleArn: !GetAtt MetricStreamRole.Arn
+      OutputFormat: opentelemetry1.0
+      IncludeFilters:
+        - Namespace: AWS/S3/Tables
+      Tags:
+        - { Key: Owner, Value: mimjasov }
+        - { Key: Project, Value: s3tables-dt-poc }
+
+Outputs:
+  MetricStreamName:
+    Value: !Ref MetricStream
+  FirehoseName:
+    Value: !Ref FirehoseMetricStream
+  FailedDataBucketName:
+    Value: !Ref FailedDataBucket

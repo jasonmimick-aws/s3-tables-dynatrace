@@ -1,0 +1,158 @@
+id: f00cf22e-4c6c-4847-bad1-6d2be5780ffc
+name: "S3 Tables Airline Data Lake — Operations"
+type: dashboard
+content:
+  annotations: []
+  importedWithCode: false
+  settings:
+    defaultTimeframe:
+      enabled: true
+      value: { from: "now()-2h", to: "now()" }
+  layouts:
+    "intro": { x: 0, "y": 0, w: 24, h: 4 }
+    "rows": { x: 0, "y": 4, w: 6, h: 4 }
+    "files": { x: 6, "y": 4, w: 6, h: 4 }
+    "snapshots": { x: 12, "y": 4, w: 6, h: 4 }
+    "schema": { x: 18, "y": 4, w: 6, h: 4 }
+    "requests": { x: 0, "y": 8, w: 12, h: 7 }
+    "latency": { x: 12, "y": 8, w: 12, h: 7 }
+    "bytes": { x: 0, "y": 15, w: 12, h: 7 }
+    "errors": { x: 12, "y": 15, w: 12, h: 7 }
+    "rowsTrend": { x: 0, "y": 22, w: 12, h: 7 }
+    "structureTrend": { x: 12, "y": 22, w: 12, h: 7 }
+    "schemaEvents": { x: 0, "y": 29, w: 24, h: 8 }
+  tiles:
+    "intro":
+      title: ""
+      type: markdown
+      content: |
+        # Airline data lake operations
+        **Amazon S3 Tables + Apache Iceberg + Dynatrace** | AWS account `347830095179` | `us-east-1`
+
+        January 2025 BTS airline data flows into `airline-datalake-poc / ops / flights`. Native `AWS/S3/Tables` telemetry arrives through CloudWatch Metric Streams; IRC metadata adds real-time row, file, schema, snapshot, and storage intelligence.
+    "rows":
+      title: "Flight records"
+      type: data
+      query: |
+        timeseries values=max(s3tables.iceberg.rows)
+        | fieldsAdd flights=arrayLast(values)
+        | fieldsKeep flights
+      visualization: singleValue
+      visualizationSettings:
+        autoSelectVisualization: false
+        singleValue: { showLabel: true, label: "Rows", recordField: flights }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "files":
+      title: "Iceberg data files"
+      type: data
+      query: |
+        timeseries values=max(s3tables.iceberg.files)
+        | fieldsAdd files=arrayLast(values)
+        | fieldsKeep files
+      visualization: singleValue
+      visualizationSettings:
+        autoSelectVisualization: false
+        singleValue: { showLabel: true, label: "Files", recordField: files }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "snapshots":
+      title: "Iceberg snapshots"
+      type: data
+      query: |
+        timeseries values=max(s3tables.iceberg.snapshots.count)
+        | fieldsAdd snapshots=arrayLast(values)
+        | fieldsKeep snapshots
+      visualization: singleValue
+      visualizationSettings:
+        autoSelectVisualization: false
+        singleValue: { showLabel: true, label: "Snapshots", recordField: snapshots }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "schema":
+      title: "Schema fields"
+      type: data
+      query: |
+        timeseries values=max(s3tables.iceberg.schema.fields)
+        | fieldsAdd fields=arrayLast(values)
+        | fieldsKeep fields
+      visualization: singleValue
+      visualizationSettings:
+        autoSelectVisualization: false
+        singleValue: { showLabel: true, label: "Columns", recordField: fields }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "requests":
+      title: "Native S3 Tables request volume"
+      type: data
+      query: |
+        timeseries all_requests=sum(cloud.aws.s3.tables.allRequestsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), get_requests=sum(cloud.aws.s3.tables.getRequestsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), head_requests=sum(cloud.aws.s3.tables.headRequestsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), metadata_reads=sum(cloud.aws.s3.tables.getTableMetadataLocationByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), metadata_updates=sum(cloud.aws.s3.tables.updateTableMetadataLocationByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), interval:1m
+      visualization: lineChart
+      visualizationSettings:
+        autoSelectVisualization: false
+        chartSettings: { legend: { position: bottom, showLegend: true }, stacked: false }
+        axes: { yAxis: { label: "Requests / minute" } }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "latency":
+      title: "Request latency"
+      type: data
+      query: |
+        timeseries first_byte_ms=avg(cloud.aws.s3.tables.firstByteLatencyByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), total_ms=avg(cloud.aws.s3.tables.totalRequestLatencyByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), interval:1m
+      visualization: lineChart
+      visualizationSettings:
+        autoSelectVisualization: false
+        chartSettings: { legend: { position: bottom, showLegend: true }, stacked: false }
+        axes: { yAxis: { label: "Milliseconds" } }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "bytes":
+      title: "Data transferred"
+      type: data
+      query: |
+        timeseries downloaded=sum(cloud.aws.s3.tables.bytesDownloadedByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), uploaded=sum(cloud.aws.s3.tables.bytesUploadedByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), interval:1m
+      visualization: areaChart
+      visualizationSettings:
+        autoSelectVisualization: false
+        chartSettings: { legend: { position: bottom, showLegend: true }, stacked: true }
+        axes: { yAxis: { label: "Bytes / minute" } }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "errors":
+      title: "Reliability — 4xx / 5xx errors"
+      type: data
+      query: |
+        timeseries errors_4xx=sum(cloud.aws.s3.tables.4xxErrorsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), errors_5xx=sum(cloud.aws.s3.tables.5xxErrorsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), interval:1m
+      visualization: areaChart
+      visualizationSettings:
+        autoSelectVisualization: false
+        chartSettings: { legend: { position: bottom, showLegend: true }, stacked: true }
+        axes: { yAxis: { label: "Errors / minute" } }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "rowsTrend":
+      title: "Flight-record and storage growth"
+      type: data
+      query: |
+        timeseries flight_records=max(s3tables.iceberg.rows), storage_bytes=max(s3tables.iceberg.storage.bytes), by:{bucket, ns, table}, interval:1m
+      visualization: lineChart
+      visualizationSettings:
+        autoSelectVisualization: false
+        chartSettings: { legend: { position: bottom, showLegend: true }, stacked: false }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "structureTrend":
+      title: "Iceberg snapshots and files"
+      type: data
+      query: |
+        timeseries snapshots=max(s3tables.iceberg.snapshots.count), files=max(s3tables.iceberg.files), interval:1m
+      visualization: lineChart
+      visualizationSettings:
+        autoSelectVisualization: false
+        chartSettings: { legend: { position: bottom, showLegend: true }, stacked: false }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "schemaEvents":
+      title: "Iceberg schema evolution and table-state events"
+      type: data
+      query: |
+        fetch events
+        | filter event.name == "S3 Tables schema change" OR event.name == "S3 Tables schema state"
+        | fields timestamp, event.name, bucket, namespace, table, schema_id, row_count, file_count, snapshot_count, storage_bytes, added, removed
+        | sort timestamp desc
+        | limit 100
+      visualization: table
+      visualizationSettings:
+        autoSelectVisualization: false
+        table: { linewrapEnabled: true }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }

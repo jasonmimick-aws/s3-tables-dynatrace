@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS operator dashboard for the S3 Tables and Dynatrace POC.
+
+Resources:
+  OperatorDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: S3Tables-Dynatrace-POC
+      DashboardBody: !Sub |
+        {
+          "start": "-PT3H",
+          "periodOverride": "inherit",
+          "widgets": [
+            {
+              "type": "text", "x": 0, "y": 0, "width": 24, "height": 4,
+              "properties": {
+                "markdown": "# S3 Tables × Dynatrace POC — AWS Operator View\n**Account:** ${AWS::AccountId} | **Region:** ${AWS::Region}\n\nTable: `airline-datalake-poc / ops / flights` | Stream/Firehose: `s3tables-to-dynatrace` | Recurring workload: `s3tables-live-workload` every 30 minutes\n\n[Dynatrace Operations](https://hgd83841.apps.dynatrace.com/ui/apps/dynatrace.dashboards/dashboard/f00cf22e-4c6c-4847-bad1-6d2be5780ffc) | [Dynatrace FinOps](https://hgd83841.apps.dynatrace.com/ui/apps/dynatrace.dashboards/dashboard/0ac17116-8d77-4201-b96d-925bc939c2b7) | [CodeBuild runs](https://${AWS::Region}.console.aws.amazon.com/codesuite/codebuild/projects/s3tables-live-workload/history?region=${AWS::Region})"
+              }
+            },
+            {
+              "type": "metric", "x": 0, "y": 4, "width": 12, "height": 6,
+              "properties": {
+                "title": "S3 Tables requests / minute", "view": "timeSeries", "stacked": false,
+                "region": "${AWS::Region}", "period": 60, "stat": "Sum",
+                "metrics": [
+                  ["AWS/S3/Tables", "AllRequests", "TableBucketName", "airline-datalake-poc", "TableName", "flights", "FilterId", "EntireBucket", "Namespace", "ops", {"label":"All requests"}],
+                  [".", "GetRequests", ".", ".", ".", ".", ".", ".", ".", ".", {"label":"GET"}],
+                  [".", "HeadRequests", ".", ".", ".", ".", ".", ".", ".", ".", {"label":"HEAD"}],
+                  [".", "GetTableMetadataLocation", ".", ".", ".", ".", ".", ".", ".", ".", {"label":"Metadata reads"}],
+                  [".", "UpdateTableMetadataLocation", ".", ".", ".", ".", ".", ".", ".", ".", {"label":"Metadata updates"}]
+                ]
+              }
+            },
+            {
+              "type": "metric", "x": 12, "y": 4, "width": 12, "height": 6,
+              "properties": {
+                "title": "S3 Tables latency", "view": "timeSeries", "stacked": false,
+                "region": "${AWS::Region}", "period": 60, "stat": "Average", "yAxis": {"left":{"label":"Milliseconds"}},
+                "metrics": [
+                  ["AWS/S3/Tables", "FirstByteLatency", "TableBucketName", "airline-datalake-poc", "TableName", "flights", "FilterId", "EntireBucket", "Namespace", "ops", {"label":"First byte"}],
+                  [".", "TotalRequestLatency", ".", ".", ".", ".", ".", ".", ".", ".", {"label":"Total"}]
+                ]
+              }
+            },
+            {
+              "type": "metric", "x": 0, "y": 10, "width": 12, "height": 6,
+              "properties": {
+                "title": "Data transferred", "view": "timeSeries", "stacked": true,
+                "region": "${AWS::Region}", "period": 60, "stat": "Sum",
+                "metrics": [
+                  ["AWS/S3/Tables", "BytesDownloaded", "TableBucketName", "airline-datalake-poc", "TableName", "flights", "FilterId", "EntireBucket", "Namespace", "ops", {"label":"Downloaded"}],
+                  [".", "BytesUploaded", ".", ".", ".", ".", ".", ".", ".", ".", {"label":"Uploaded"}]
+                ]
+              }
+            },
+            {
+              "type": "metric", "x": 12, "y": 10, "width": 12, "height": 6,
+              "properties": {
+                "title": "Firehose → Dynatrace delivery", "view": "timeSeries", "stacked": false,
+                "region": "${AWS::Region}", "period": 60, "stat": "Sum",
+                "metrics": [
+                  ["AWS/Firehose", "IncomingRecords", "DeliveryStreamName", "s3tables-to-dynatrace", {"label":"Incoming records"}],
+                  [".", "DeliveryToHttpEndpoint.Success", ".", ".", {"label":"Successful delivery"}],
+                  [".", "DeliveryToHttpEndpoint.Records", ".", ".", {"label":"Delivered records"}]
+                ]
+              }
+            },
+            {
+              "type": "metric", "x": 0, "y": 16, "width": 12, "height": 6,
+              "properties": {
+                "title": "S3 Tables reliability", "view": "timeSeries", "stacked": true,
+                "region": "${AWS::Region}", "period": 60, "stat": "Sum",
+                "metrics": [
+                  ["AWS/S3/Tables", "4xxErrors", "TableBucketName", "airline-datalake-poc", "TableName", "flights", "FilterId", "EntireBucket", "Namespace", "ops", {"label":"4xx"}],
+                  [".", "5xxErrors", ".", ".", ".", ".", ".", ".", ".", ".", {"label":"5xx"}]
+                ]
+              }
+            },
+            {
+              "type": "metric", "x": 12, "y": 16, "width": 12, "height": 6,
+              "properties": {
+                "title": "Recurring workload builds", "view": "timeSeries", "stacked": false,
+                "region": "${AWS::Region}", "period": 300, "stat": "Sum",
+                "metrics": [
+                  ["AWS/CodeBuild", "SucceededBuilds", "ProjectName", "s3tables-live-workload", {"label":"Succeeded"}],
+                  [".", "FailedBuilds", ".", ".", {"label":"Failed"}]
+                ]
+              }
+            },
+            {
+              "type": "metric", "x": 0, "y": 22, "width": 24, "height": 6,
+              "properties": {
+                "title": "Live Iceberg table state", "view": "singleValue", "sparkline": true,
+                "region": "${AWS::Region}", "period": 300, "stat": "Maximum",
+                "metrics": [
+                  ["S3Tables/POC", "Rows", "Bucket", "airline-datalake-poc", "Namespace", "ops", "Table", "flights", {"label":"Rows"}],
+                  [".", "Files", ".", ".", ".", ".", ".", ".", {"label":"Files"}],
+                  [".", "Snapshots", ".", ".", ".", ".", ".", ".", {"label":"Snapshots"}],
+                  [".", "SchemaFields", ".", ".", ".", ".", ".", ".", {"label":"Schema fields"}],
+                  [".", "StorageBytes", ".", ".", ".", ".", ".", ".", {"label":"Storage bytes"}]
+                ]
+              }
+            }
+          ]
+        }
+
+Outputs:
+  DashboardName: { Value: !Ref OperatorDashboard }
+  DashboardUrl:
+    Value: !Sub https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=S3Tables-Dynatrace-POC

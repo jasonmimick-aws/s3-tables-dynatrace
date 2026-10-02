@@ -1,0 +1,16 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - curl -LsSf https://astral.sh/uv/install.sh | sh
+      - export PATH="$HOME/.local/bin:$PATH"
+      - uv sync --frozen
+  build:
+    commands:
+      - export PATH="$HOME/.local/bin:$PATH"
+      - uv run python loader.py "${BTS_YEAR:-2025}" "${BTS_MONTH:-1}"
+      - uv run python loadgen.py "${LOADGEN_MINUTES:-20}"
+  post_build:
+    commands:
+      - echo "BTS load and sustained S3 Tables workload completed"

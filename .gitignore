@@ -1,0 +1,15 @@
+# creds / local state — never commit
+.table_bucket_arn
+.env
+.env.*
+*.pem
+.aws/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.uv/
+
+# os
+.DS_Store

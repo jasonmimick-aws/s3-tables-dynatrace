@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - curl -LsSf https://astral.sh/uv/install.sh | sh
+      - export PATH="$HOME/.local/bin:$PATH"
+      - uv sync --frozen
+  build:
+    commands:
+      - export PATH="$HOME/.local/bin:$PATH"
+      - uv run python loadgen.py "${LOADGEN_MINUTES:-15}"
+      - export DT_TOKEN=$(aws secretsmanager get-secret-value --secret-id s3tables-dynatrace/metadata-ingest-token --region "${AWS_REGION}" --query SecretString --output text)
+      - uv run python irc_metadata.py
+  post_build:
+    commands:
+      - echo "Recurring S3 Tables workload completed"

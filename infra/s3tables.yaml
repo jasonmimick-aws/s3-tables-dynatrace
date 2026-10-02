@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  S3 Tables airline data lake for the Dynatrace POC — a table bucket, an "ops"
+  namespace, and a "flights" Iceberg table seeded with the BTS on-time schema.
+
+Parameters:
+  TableBucketName:
+    Type: String
+    Default: airline-datalake-poc
+
+Resources:
+  TableBucket:
+    Type: AWS::S3Tables::TableBucket
+    Properties:
+      TableBucketName: !Ref TableBucketName
+
+  OpsNamespace:
+    Type: AWS::S3Tables::Namespace
+    Properties:
+      TableBucketARN: !Ref TableBucket
+      Namespace: ops
+
+  FlightsTable:
+    Type: AWS::S3Tables::Table
+    DependsOn: OpsNamespace
+    Properties:
+      TableBucketARN: !Ref TableBucket
+      Namespace: ops
+      TableName: flights
+      OpenTableFormat: ICEBERG
+      # Verify nested property names (IcebergMetadata/IcebergSchema/SchemaFieldList)
+      # against the live CFN reference at build time — plan item d.
+      IcebergMetadata:
+        IcebergSchema:
+          SchemaFieldList:
+            - { Name: flight_date, Type: date }
+            - { Name: carrier, Type: string }
+            - { Name: flight_number, Type: string }
+            - { Name: origin, Type: string }
+            - { Name: dest, Type: string }
+            - { Name: dep_delay, Type: double }
+            - { Name: arr_delay, Type: double }
+            - { Name: cancelled, Type: double }
+            - { Name: diverted, Type: double }
+            - { Name: air_time, Type: double }
+            - { Name: distance, Type: double }
+            - { Name: carrier_delay, Type: double }
+            - { Name: weather_delay, Type: double }
+            - { Name: nas_delay, Type: double }
+            - { Name: late_aircraft_delay, Type: double }
+
+Outputs:
+  TableBucketArn:
+    Description: ARN of the S3 Tables table bucket
+    Value: !Ref TableBucket

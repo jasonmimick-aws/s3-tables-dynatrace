@@ -1,0 +1,143 @@
+id: 0ac17116-8d77-4201-b96d-925bc939c2b7
+name: "S3 Tables Airline Data Lake — FinOps & Intelligence"
+type: dashboard
+content:
+  annotations: []
+  importedWithCode: false
+  settings:
+    defaultTimeframe:
+      enabled: true
+      value: { from: "now()-2h", to: "now()" }
+  layouts:
+    "intro": { x: 0, "y": 0, w: 24, h: 5 }
+    "storage": { x: 0, "y": 5, w: 6, h: 4 }
+    "monitoring": { x: 6, "y": 5, w: 6, h: 4 }
+    "requests": { x: 12, "y": 5, w: 6, h: 4 }
+    "total": { x: 18, "y": 5, w: 6, h: 4 }
+    "costTrend": { x: 0, "y": 9, w: 12, h: 7 }
+    "requestTrend": { x: 12, "y": 9, w: 12, h: 7 }
+    "scale": { x: 0, "y": 16, w: 12, h: 7 }
+    "metadata": { x: 12, "y": 16, w: 12, h: 7 }
+    "priceCard": { x: 0, "y": 23, w: 24, h: 7 }
+  tiles:
+    "intro":
+      title: ""
+      type: markdown
+      content: |
+        # S3 Tables FinOps & table intelligence
+        Convert live Iceberg state and native AWS request telemetry into operational cost estimates, then correlate spend drivers with schema and snapshot evolution.
+
+        **POC rates:** storage `$0.0265/GB-month`; object monitoring `$0.025/1,000`; GET `$0.0004/1,000`; PUT `$0.005/1,000`; binpack compaction `$0.005/GB + $0.002/1,000 objects`. Source: current AWS S3 pricing example.
+    "storage":
+      title: "Storage / month"
+      type: data
+      query: |
+        timeseries bytes=max(s3tables.iceberg.storage.bytes)
+        | fieldsAdd monthly_storage_usd=arrayLast(bytes)/1073741824*0.0265
+        | fieldsKeep monthly_storage_usd
+      visualization: singleValue
+      visualizationSettings:
+        autoSelectVisualization: false
+        singleValue: { showLabel: true, label: "USD / month", recordField: monthly_storage_usd }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "monitoring":
+      title: "Object monitoring / month"
+      type: data
+      query: |
+        timeseries objects=max(s3tables.iceberg.files)
+        | fieldsAdd monthly_monitoring_usd=arrayLast(objects)/1000*0.025
+        | fieldsKeep monthly_monitoring_usd
+      visualization: singleValue
+      visualizationSettings:
+        autoSelectVisualization: false
+        singleValue: { showLabel: true, label: "USD / month", recordField: monthly_monitoring_usd }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "requests":
+      title: "GET + PUT cost in timeframe"
+      type: data
+      query: |
+        timeseries gets=sum(cloud.aws.s3.tables.getRequestsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), puts=sum(cloud.aws.s3.tables.putRequestsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName)
+        | fieldsAdd request_cost_usd=arraySum(gets)/1000*0.0004 + arraySum(puts)/1000*0.005
+        | fieldsKeep request_cost_usd
+      visualization: singleValue
+      visualizationSettings:
+        autoSelectVisualization: false
+        singleValue: { showLabel: true, label: "USD", recordField: request_cost_usd }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "total":
+      title: "Baseline / month"
+      type: data
+      query: |
+        timeseries bytes=max(s3tables.iceberg.storage.bytes), objects=max(s3tables.iceberg.files)
+        | fieldsAdd estimated_monthly_usd=arrayLast(bytes)/1073741824*0.0265 + arrayLast(objects)/1000*0.025
+        | fieldsKeep estimated_monthly_usd
+      visualization: singleValue
+      visualizationSettings:
+        autoSelectVisualization: false
+        singleValue: { showLabel: true, label: "USD / month", recordField: estimated_monthly_usd }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "costTrend":
+      title: "Estimated storage cost as the table grows"
+      type: data
+      query: |
+        timeseries bytes=max(s3tables.iceberg.storage.bytes), by:{bucket, ns, table}, interval:5m
+        | fieldsAdd estimated_storage_usd=bytes[]/1073741824*0.0265
+        | fieldsRemove bytes
+      visualization: areaChart
+      visualizationSettings:
+        autoSelectVisualization: false
+        chartSettings: { legend: { position: bottom, showLegend: true }, stacked: false }
+        axes: { yAxis: { label: "USD / month" } }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "requestTrend":
+      title: "Native request cost drivers"
+      type: data
+      query: |
+        timeseries gets=sum(cloud.aws.s3.tables.getRequestsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), puts=sum(cloud.aws.s3.tables.putRequestsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), metadata_reads=sum(cloud.aws.s3.tables.getTableMetadataLocationByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), metadata_updates=sum(cloud.aws.s3.tables.updateTableMetadataLocationByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), interval:1m
+      visualization: areaChart
+      visualizationSettings:
+        autoSelectVisualization: false
+        chartSettings: { legend: { position: bottom, showLegend: true }, stacked: true }
+        axes: { yAxis: { label: "Requests / minute" } }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "scale":
+      title: "Airline-scale monthly storage projection"
+      type: data
+      query: |
+        data record(scale="100 GB", gb=100.0), record(scale="1 TB", gb=1024.0), record(scale="10 TB", gb=10240.0), record(scale="50 TB", gb=51200.0)
+        | fieldsAdd storage_usd=gb*0.0265
+      visualization: table
+      visualizationSettings:
+        autoSelectVisualization: false
+        table:
+          linewrapEnabled: true
+          columnOrder: ['["scale"]', '["gb"]', '["storage_usd"]']
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "metadata":
+      title: "Current table intelligence"
+      type: data
+      query: |
+        timeseries rows=max(s3tables.iceberg.rows), files=max(s3tables.iceberg.files), bytes=max(s3tables.iceberg.storage.bytes), snapshots=max(s3tables.iceberg.snapshots.count), schema_fields=max(s3tables.iceberg.schema.fields), by:{bucket, ns, table}
+        | fieldsAdd current_rows=arrayLast(rows), current_files=arrayLast(files), current_bytes=arrayLast(bytes), current_snapshots=arrayLast(snapshots), current_schema_fields=arrayLast(schema_fields)
+        | fieldsKeep bucket, ns, table, current_rows, current_files, current_bytes, current_snapshots, current_schema_fields
+      visualization: table
+      visualizationSettings:
+        autoSelectVisualization: false
+        table: { linewrapEnabled: true }
+      davis: { enabled: false, davisVisualization: { isAvailable: true } }
+    "priceCard":
+      title: ""
+      type: markdown
+      content: |
+        ## Current AWS S3 Tables cost drivers
+
+        | Driver | Rate used | Telemetry source |
+        |---|---:|---|
+        | Standard storage | $0.0265 / GB-month | IRC live bytes; reconcile with daily CloudWatch storage |
+        | Object monitoring | $0.025 / 1,000 objects | IRC live file count |
+        | GET | $0.0004 / 1,000 requests | Native `AWS/S3/Tables` Metric Stream |
+        | PUT | $0.005 / 1,000 requests | Native `AWS/S3/Tables` Metric Stream |
+        | Binpack bytes | $0.005 / GB processed | Daily native compaction metric |
+        | Binpack objects | $0.002 / 1,000 objects | Daily native compaction metric |
+
+        Actual charges vary by Region and usage. This is an operational estimate, not billing data.
