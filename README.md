@@ -86,6 +86,21 @@ read/write workloads, ~20 ms average request latency, and zero 4xx/5xx errors in
 verification windows. Current operational state and exact resource names are in
 [`STATUS.md`](STATUS.md).
 
+## Dashboards
+
+**Airline Data Lake — Operations.** Native `AWS/S3/Tables` request volume, latency, data
+transferred, and 4xx/5xx reliability, presented alongside live Iceberg state — rows, data
+files, snapshots, and schema field count — for the `airline-datalake-poc / ops / flights`
+table.
+
+![Operations dashboard — request volume, latency, data transferred, reliability, and live Iceberg state](docs/images/operations-dashboard.png)
+
+**FinOps & Intelligence.** Live Iceberg state and native request telemetry converted into
+operational cost estimates, with native request cost drivers, an airline-scale monthly
+storage projection, and current per-table intelligence.
+
+![FinOps and Intelligence dashboard — cost estimates, request cost drivers, storage projection, and table intelligence](docs/images/finops-dashboard.png)
+
 ## What is missing — and what Dynatrace should build
 
 The native integration is accurate and shippable, but it is shallow by nature: streamed

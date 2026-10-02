@@ -49,6 +49,14 @@ These are estimates, not billing records, and actual rates vary by Region and us
 
 ## Dashboards
 
+**Airline Data Lake — Operations** presents native `AWS/S3/Tables` request volume, latency, data transferred, and 4xx/5xx reliability alongside live Iceberg state—rows, data files, snapshots, and schema field count.
+
+![Operations dashboard](docs/images/operations-dashboard.png)
+
+**FinOps & Intelligence** converts live Iceberg state and native request telemetry into operational cost estimates, with request cost drivers, an airline-scale storage projection, and current per-table intelligence.
+
+![FinOps and Intelligence dashboard](docs/images/finops-dashboard.png)
+
 - Airline Data Lake — Operations
 - S3 Tables Airline Data Lake — FinOps & Intelligence
 
