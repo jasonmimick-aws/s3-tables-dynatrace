@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: s3tables-iceberg
+Version: 0.1.0
+Summary: Add your description here
+Author: AWS + Dynatrace S3 Tables integration
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: boto3>=1.43.110
+Requires-Dist: dt-extensions-sdk[cli]>=1.10.2
+Requires-Dist: pyiceberg[pyarrow]==0.12.0
+Requires-Dist: requests==2.34.2
+Dynamic: author
+Dynamic: requires-python

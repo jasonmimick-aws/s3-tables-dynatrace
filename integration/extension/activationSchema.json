@@ -1,0 +1,134 @@
+{
+  "types": {
+    "dynatrace.datasource.python:s3tables-iceberg-endpoint": {
+      "type": "object",
+      "displayName": "S3 Tables endpoint",
+      "summaryPattern": "S3 Tables {bucket} ({aws_region})",
+      "properties": {
+        "aws_region": {
+          "displayName": "AWS region",
+          "description": "AWS region hosting the S3 Tables bucket and the IRC endpoint.",
+          "type": "text",
+          "nullable": false,
+          "default": "us-east-1",
+          "constraints": [{ "type": "LENGTH", "minLength": 1, "maxLength": 64 }],
+          "maxItems": 1
+        },
+        "bucket": {
+          "displayName": "Table bucket name",
+          "description": "S3 Tables table-bucket name.",
+          "type": "text",
+          "nullable": false,
+          "default": "airline-datalake-poc",
+          "constraints": [{ "type": "LENGTH", "minLength": 1, "maxLength": 255 }],
+          "maxItems": 1
+        },
+        "namespace": {
+          "displayName": "Namespace",
+          "description": "Iceberg namespace within the table bucket.",
+          "type": "text",
+          "nullable": false,
+          "default": "ops",
+          "constraints": [{ "type": "LENGTH", "minLength": 1, "maxLength": 255 }],
+          "maxItems": 1
+        },
+        "table": {
+          "displayName": "Table",
+          "description": "Iceberg table name within the namespace.",
+          "type": "text",
+          "nullable": false,
+          "default": "flights",
+          "constraints": [{ "type": "LENGTH", "minLength": 1, "maxLength": 255 }],
+          "maxItems": 1
+        },
+        "table_bucket_arn": {
+          "displayName": "Table bucket ARN (optional)",
+          "description": "Optional explicit table-bucket ARN used as the IRC warehouse. Leave blank to derive it from region/account/bucket.",
+          "type": "text",
+          "nullable": true,
+          "default": "",
+          "constraints": [{ "type": "LENGTH", "minLength": 0, "maxLength": 512 }],
+          "maxItems": 1
+        },
+        "ingest_mode": {
+          "displayName": "Ingest mode",
+          "description": "How metrics/events reach Dynatrace. 'eec' (default) routes through the ActiveGate Extension Execution Controller and needs no token. 'direct' posts straight to the tenant ingest APIs using a token (for standalone/off-ActiveGate runs and simulation).",
+          "type": "text",
+          "nullable": false,
+          "default": "eec",
+          "constraints": [{ "type": "LENGTH", "minLength": 1, "maxLength": 16 }],
+          "maxItems": 1
+        },
+        "ingest_secret_id": {
+          "displayName": "Ingest token Secrets Manager ID",
+          "description": "AWS Secrets Manager secret id holding the Dynatrace ingest token as JSON {\"api_key\":\"...\"} (scopes metrics.ingest + events.ingest). Used only when ingest_mode = direct and no inline token is supplied.",
+          "type": "text",
+          "nullable": true,
+          "default": "s3tables-dynatrace/metadata-ingest-token",
+          "constraints": [{ "type": "LENGTH", "minLength": 0, "maxLength": 255 }],
+          "maxItems": 1
+        },
+        "ingest_token": {
+          "displayName": "Ingest token (optional, direct mode)",
+          "description": "Optional inline Dynatrace ingest token for direct mode. Prefer the Secrets Manager id above so the token is never stored in config. Stored as a Dynatrace secret.",
+          "type": "secret",
+          "nullable": true,
+          "default": "",
+          "constraints": [{ "type": "LENGTH", "minLength": 0, "maxLength": 500 }],
+          "maxItems": 1
+        }
+      }
+    },
+    "pythonRemote": {
+      "type": "object",
+      "properties": {
+        "endpoints": {
+          "displayName": "S3 Tables endpoints",
+          "type": "list",
+          "items": {
+            "type": { "$ref": "#/types/dynatrace.datasource.python:s3tables-iceberg-endpoint" }
+          },
+          "nullable": false,
+          "minItems": 1,
+          "maxItems": 100,
+          "metaData": { "addItemButton": "Add S3 Tables endpoint" }
+        }
+      }
+    },
+    "pythonLocal": {
+      "type": "object",
+      "properties": {
+        "endpoints": {
+          "displayName": "S3 Tables endpoints",
+          "type": "list",
+          "items": {
+            "type": { "$ref": "#/types/dynatrace.datasource.python:s3tables-iceberg-endpoint" }
+          },
+          "nullable": false,
+          "minItems": 1,
+          "maxItems": 100,
+          "metaData": { "addItemButton": "Add S3 Tables endpoint" }
+        }
+      }
+    }
+  },
+  "dynatrace": "1",
+  "description": "Amazon S3 Tables (Iceberg via IRC) configuration",
+  "schemaId": "python-extension.activation",
+  "displayName": "Amazon S3 Tables (Iceberg) configuration",
+  "ownerProductManagement": "dynatrace",
+  "ownerDevelopment": "dynatrace",
+  "maturity": "GENERAL_AVAILABILITY",
+  "allowedScopes": ["tenant"],
+  "multiObject": false,
+  "properties": {
+    "pythonLocal": {
+      "displayName": "Python Local Extension",
+      "type": { "$ref": "#/types/pythonLocal" }
+    },
+    "pythonRemote": {
+      "displayName": "Python Remote Extension",
+      "type": { "$ref": "#/types/pythonRemote" }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+boto3>=1.43.110
+dt-extensions-sdk[cli]>=1.10.2
+pyiceberg[pyarrow]==0.12.0
+requests==2.34.2

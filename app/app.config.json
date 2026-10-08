@@ -1,0 +1,16 @@
+{
+  "$schema": "./.dt-app/app.config.schema.json",
+  "environmentUrl": "https://hgd83841.apps.dynatrace.com/",
+  "app": {
+    "name": "s3-tables-observability",
+    "version": "0.0.0",
+    "description": "Amazon S3 Tables observability — Iceberg metadata, native request telemetry, schema timeline and FinOps",
+    "id": "my.s.3.tables.observability",
+    "scopes": [
+      { "name": "storage:metrics:read", "comment": "read s3tables.iceberg.* and native cloud.aws.s3.tables.* metrics" },
+      { "name": "storage:events:read", "comment": "read S3 Tables schema state / schema change events" },
+      { "name": "storage:buckets:read", "comment": "read Grail buckets backing metrics and events" },
+      { "name": "storage:logs:read", "comment": "default template" }
+    ]
+  }
+}

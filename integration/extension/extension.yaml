@@ -1,0 +1,136 @@
+name: custom:s3tables.iceberg
+version: 0.1.0
+minDynatraceVersion: "1.301.0"
+author:
+  name: "AWS + Dynatrace S3 Tables integration"
+
+# ---------------------------------------------------------------------------
+# Python datasource (runs on an ActiveGate). The module below subclasses the
+# Extensions 2.0 SDK Extension base; its scheduled `query` reads S3 Tables
+# Iceberg state over the IRC and reports the metrics/events/topology below.
+# ---------------------------------------------------------------------------
+python:
+  runtime:
+    module: s3tables_iceberg
+    version:
+      min: "3.10"
+  activation:
+    remote:
+      path: activationSchema.json
+    local:
+      path: activationSchema.json
+
+# ---------------------------------------------------------------------------
+# Metric metadata. Keys are the authoritative contract (do NOT rename — the
+# dashboards and the app depend on them). Dimensions: bucket, ns, table.
+# ---------------------------------------------------------------------------
+metrics:
+  - key: s3tables.iceberg.rows
+    metadata:
+      displayName: S3 Tables Iceberg rows
+      description: Total records in the Iceberg table (current snapshot)
+      unit: Count
+  - key: s3tables.iceberg.files
+    metadata:
+      displayName: S3 Tables Iceberg data files
+      description: Total data files in the current snapshot
+      unit: Count
+  - key: s3tables.iceberg.snapshots.count
+    metadata:
+      displayName: S3 Tables Iceberg snapshots
+      description: Number of snapshots retained for the table
+      unit: Count
+  - key: s3tables.iceberg.schema.fields
+    metadata:
+      displayName: S3 Tables Iceberg schema fields
+      description: Number of columns in the current table schema
+      unit: Count
+  - key: s3tables.iceberg.storage.bytes
+    metadata:
+      displayName: S3 Tables Iceberg storage bytes
+      description: Current Iceberg data-file storage size
+      unit: Byte
+
+# ---------------------------------------------------------------------------
+# Topology — the differentiator. Three custom entity types forming a
+# table_bucket --contains--> namespace --contains--> table hierarchy. Entities
+# are built from the bucket/ns/table dimensions carried on every metric above.
+# ---------------------------------------------------------------------------
+topology:
+  types:
+    - name: s3tables:table_bucket
+      displayName: S3 Tables table bucket
+      enabled: true
+      rules:
+        - idPattern: s3tables_bucket_{bucket}
+          instanceNamePattern: "{bucket}"
+          enabled: true
+          sources:
+            - sourceType: Metrics
+              condition: $prefix(s3tables.iceberg.)
+          requiredDimensions:
+            - key: bucket
+          attributes:
+            - key: bucket
+              displayName: Table bucket
+              pattern: "{bucket}"
+
+    - name: s3tables:namespace
+      displayName: S3 Tables namespace
+      enabled: true
+      rules:
+        - idPattern: s3tables_ns_{bucket}_{ns}
+          instanceNamePattern: "{bucket}/{ns}"
+          enabled: true
+          sources:
+            - sourceType: Metrics
+              condition: $prefix(s3tables.iceberg.)
+          requiredDimensions:
+            - key: bucket
+            - key: ns
+          attributes:
+            - key: ns
+              displayName: Namespace
+              pattern: "{ns}"
+
+    - name: s3tables:table
+      displayName: S3 Tables table
+      enabled: true
+      rules:
+        - idPattern: s3tables_table_{bucket}_{ns}_{table}
+          instanceNamePattern: "{bucket}/{ns}/{table}"
+          enabled: true
+          sources:
+            - sourceType: Metrics
+              condition: $prefix(s3tables.iceberg.)
+          requiredDimensions:
+            - key: bucket
+            - key: ns
+            - key: table
+          attributes:
+            - key: table
+              displayName: Table
+              pattern: "{table}"
+            - key: ns
+              displayName: Namespace
+              pattern: "{ns}"
+            - key: bucket
+              displayName: Table bucket
+              pattern: "{bucket}"
+
+  relationships:
+    - fromType: s3tables:table_bucket
+      typeOfRelation: CONTAINS
+      toType: s3tables:namespace
+      enabled: true
+      sources:
+        - sourceType: Metrics
+          condition: $prefix(s3tables.iceberg.)
+
+    - fromType: s3tables:namespace
+      typeOfRelation: CONTAINS
+      toType: s3tables:table
+      enabled: true
+      sources:
+        - sourceType: Metrics
+          condition: $prefix(s3tables.iceberg.)

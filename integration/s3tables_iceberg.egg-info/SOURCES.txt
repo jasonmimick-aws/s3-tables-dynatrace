@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+setup.py
+s3tables_iceberg/__init__.py
+s3tables_iceberg/__main__.py
+s3tables_iceberg.egg-info/PKG-INFO
+s3tables_iceberg.egg-info/SOURCES.txt
+s3tables_iceberg.egg-info/dependency_links.txt
+s3tables_iceberg.egg-info/requires.txt
+s3tables_iceberg.egg-info/top_level.txt

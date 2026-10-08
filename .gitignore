@@ -11,5 +11,16 @@ __pycache__/
 *.pyc
 .uv/
 
+# node / dt-app build artifacts
+node_modules/
+app/dist/
+app/.dt-app/build/
+app/.dt-app/logs/
+
+# dynatrace extension build artifacts
+integration/dist/
+integration/extension/lib/
+*.zip
+
 # os
 .DS_Store
