@@ -38,29 +38,33 @@ export const RATES = {
  * Overview — single-value tiles (operations dashboard, verbatim).
  * Each returns a single record with the named field.
  * -------------------------------------------------------------------------- */
+// IRC metrics are ingested only when the collector runs (sparse), unlike the
+// per-minute native AWS metrics. So "current state" tiles pin a 24h lookback and
+// take the last NON-null sample (arrayRemoveNulls) to always find the latest value
+// regardless of the global timeframe.
 export const SINGLE_VALUE = {
   rows: {
     field: "flights",
-    query: `timeseries values=max(${ICEBERG_METRICS.rows})
-| fieldsAdd flights=arrayLast(values)
+    query: `timeseries values=max(${ICEBERG_METRICS.rows}), from:now()-24h
+| fieldsAdd flights=arrayLast(arrayRemoveNulls(values))
 | fieldsKeep flights`,
   },
   files: {
     field: "files",
-    query: `timeseries values=max(${ICEBERG_METRICS.files})
-| fieldsAdd files=arrayLast(values)
+    query: `timeseries values=max(${ICEBERG_METRICS.files}), from:now()-24h
+| fieldsAdd files=arrayLast(arrayRemoveNulls(values))
 | fieldsKeep files`,
   },
   snapshots: {
     field: "snapshots",
-    query: `timeseries values=max(${ICEBERG_METRICS.snapshots})
-| fieldsAdd snapshots=arrayLast(values)
+    query: `timeseries values=max(${ICEBERG_METRICS.snapshots}), from:now()-24h
+| fieldsAdd snapshots=arrayLast(arrayRemoveNulls(values))
 | fieldsKeep snapshots`,
   },
   schemaFields: {
     field: "fields",
-    query: `timeseries values=max(${ICEBERG_METRICS.schemaFields})
-| fieldsAdd fields=arrayLast(values)
+    query: `timeseries values=max(${ICEBERG_METRICS.schemaFields}), from:now()-24h
+| fieldsAdd fields=arrayLast(arrayRemoveNulls(values))
 | fieldsKeep fields`,
   },
 } as const;
@@ -79,8 +83,8 @@ export const OPS_CHARTS = {
  * Topology — current per-table state grouped by {bucket, ns, table}
  * (finops dashboard "metadata" tile, verbatim).
  * -------------------------------------------------------------------------- */
-export const TOPOLOGY_STATE = `timeseries rows=max(${ICEBERG_METRICS.rows}), files=max(${ICEBERG_METRICS.files}), bytes=max(${ICEBERG_METRICS.storageBytes}), snapshots=max(${ICEBERG_METRICS.snapshots}), schema_fields=max(${ICEBERG_METRICS.schemaFields}), by:{bucket, ns, table}
-| fieldsAdd current_rows=arrayLast(rows), current_files=arrayLast(files), current_bytes=arrayLast(bytes), current_snapshots=arrayLast(snapshots), current_schema_fields=arrayLast(schema_fields)
+export const TOPOLOGY_STATE = `timeseries rows=max(${ICEBERG_METRICS.rows}), files=max(${ICEBERG_METRICS.files}), bytes=max(${ICEBERG_METRICS.storageBytes}), snapshots=max(${ICEBERG_METRICS.snapshots}), schema_fields=max(${ICEBERG_METRICS.schemaFields}), by:{bucket, ns, table}, from:now()-24h
+| fieldsAdd current_rows=arrayLast(arrayRemoveNulls(rows)), current_files=arrayLast(arrayRemoveNulls(files)), current_bytes=arrayLast(arrayRemoveNulls(bytes)), current_snapshots=arrayLast(arrayRemoveNulls(snapshots)), current_schema_fields=arrayLast(arrayRemoveNulls(schema_fields))
 | fieldsKeep bucket, ns, table, current_rows, current_files, current_bytes, current_snapshots, current_schema_fields`;
 
 export interface TableStateRecord {
@@ -133,14 +137,14 @@ export const LATEST_SCHEMA_STATE = `fetch events
 export const FINOPS_SINGLE_VALUE = {
   storage: {
     field: "monthly_storage_usd",
-    query: `timeseries bytes=max(${ICEBERG_METRICS.storageBytes})
-| fieldsAdd monthly_storage_usd=arrayLast(bytes)/1073741824*${RATES.storagePerGbMonth}
+    query: `timeseries bytes=max(${ICEBERG_METRICS.storageBytes}), from:now()-24h
+| fieldsAdd monthly_storage_usd=arrayLast(arrayRemoveNulls(bytes))/1073741824*${RATES.storagePerGbMonth}
 | fieldsKeep monthly_storage_usd`,
   },
   monitoring: {
     field: "monthly_monitoring_usd",
-    query: `timeseries objects=max(${ICEBERG_METRICS.files})
-| fieldsAdd monthly_monitoring_usd=arrayLast(objects)/1000*${RATES.monitoringPer1kObjects}
+    query: `timeseries objects=max(${ICEBERG_METRICS.files}), from:now()-24h
+| fieldsAdd monthly_monitoring_usd=arrayLast(arrayRemoveNulls(objects))/1000*${RATES.monitoringPer1kObjects}
 | fieldsKeep monthly_monitoring_usd`,
   },
   requests: {
@@ -151,8 +155,8 @@ export const FINOPS_SINGLE_VALUE = {
   },
   total: {
     field: "estimated_monthly_usd",
-    query: `timeseries bytes=max(${ICEBERG_METRICS.storageBytes}), objects=max(${ICEBERG_METRICS.files})
-| fieldsAdd estimated_monthly_usd=arrayLast(bytes)/1073741824*${RATES.storagePerGbMonth} + arrayLast(objects)/1000*${RATES.monitoringPer1kObjects}
+    query: `timeseries bytes=max(${ICEBERG_METRICS.storageBytes}), objects=max(${ICEBERG_METRICS.files}), from:now()-24h
+| fieldsAdd estimated_monthly_usd=arrayLast(arrayRemoveNulls(bytes))/1073741824*${RATES.storagePerGbMonth} + arrayLast(arrayRemoveNulls(objects))/1000*${RATES.monitoringPer1kObjects}
 | fieldsKeep estimated_monthly_usd`,
   },
 } as const;
