@@ -140,6 +140,22 @@ Amazon S3 Tables (airline-datalake-poc / ops / flights)
             -> Dynatrace metric & event ingest       [intelligence plane, the Build target]
 ```
 
+## Productized build — integration + app
+
+The IRC prototype is now packaged into two Dynatrace-native deliverables, both built on a
+shared collector and verified live (see [`integration/VERIFICATION.md`](integration/VERIFICATION.md)):
+
+- **[`integration/`](integration/README.md)** — a **Dynatrace Extensions 2.0** extension
+  (`custom:s3tables.iceberg`) that runs on an ActiveGate, polls the S3 Tables IRC, and
+  reports the Iceberg metrics, schema-state/-change events, and table-bucket → namespace →
+  table **topology**. Builds and signs to a deployable zip.
+- **[`app/`](app/README.md)** — a **Dynatrace App** (dt-app App Toolkit) with four screens:
+  Overview, Topology, Schema timeline, and FinOps.
+- **[`poc/s3tables_core.py`](poc/s3tables_core.py)** — the shared, hardened collector both
+  build on.
+
+Build, test, and deploy runbook: [`BUILD.md`](BUILD.md).
+
 ## Repository layout
 
 ```
