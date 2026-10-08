@@ -1,8 +1,8 @@
 import React from "react";
 import { useDql } from "@dynatrace-sdk/react-hooks";
 import { Surface } from "@dynatrace/strato-components/layouts";
-import { SingleValue } from "@dynatrace/strato-components/charts";
 import { QueryState } from "./QueryState";
+import { KpiValue } from "./Kpi";
 
 type TileFormat = "int" | "usd" | "raw";
 
@@ -48,20 +48,19 @@ export const MetricTile = ({ query, field, label, format = "int" }: MetricTilePr
   return (
     <Surface
       style={{
-        minWidth: 180,
-        minHeight: 120,
+        minWidth: 200,
+        minHeight: 110,
         padding: 16,
-        flex: "1 1 180px",
+        flex: "1 1 200px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
       }}
     >
       {isLoading || error ? (
         <QueryState isLoading={isLoading} error={error} />
       ) : (
-        <SingleValue
-          data={record ? formatValue(record[field], format) : "—"}
-          label={label}
-          alignment="start"
-        />
+        <KpiValue label={label} value={record ? formatValue(record[field], format) : "—"} />
       )}
     </Surface>
   );

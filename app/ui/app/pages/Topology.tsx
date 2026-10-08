@@ -2,10 +2,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDql } from "@dynatrace-sdk/react-hooks";
 import { Flex, Surface, Divider } from "@dynatrace/strato-components/layouts";
 import { Heading, Paragraph, Strong, Text } from "@dynatrace/strato-components/typography";
-import { SingleValue } from "@dynatrace/strato-components/charts";
+import { QueryState } from "../components/QueryState";
+import { KpiValue } from "../components/Kpi";
 import Colors from "@dynatrace/strato-design-tokens/colors";
 import Borders from "@dynatrace/strato-design-tokens/borders";
-import { QueryState } from "../components/QueryState";
 import { TOPOLOGY_STATE, type TableStateRecord } from "../queries";
 
 const keyOf = (r: TableStateRecord) => `${r.bucket}/${r.ns}/${r.table}`;
@@ -103,12 +103,12 @@ export const Topology = () => {
                   {selectedRecord.bucket} / {selectedRecord.ns} / {selectedRecord.table}
                 </Heading>
                 <Divider />
-                <Flex gap={16} flexFlow="wrap">
-                  <SingleValue data={num(selectedRecord.current_rows)} label="Flight records" alignment="start" />
-                  <SingleValue data={num(selectedRecord.current_files)} label="Data files" alignment="start" />
-                  <SingleValue data={num(selectedRecord.current_snapshots)} label="Snapshots" alignment="start" />
-                  <SingleValue data={num(selectedRecord.current_schema_fields)} label="Schema fields" alignment="start" />
-                  <SingleValue data={num(selectedRecord.current_bytes)} label="Storage bytes" alignment="start" unit="B" />
+                <Flex gap={24} flexFlow="wrap">
+                  <KpiValue label="Flight records" value={num(selectedRecord.current_rows)} />
+                  <KpiValue label="Data files" value={num(selectedRecord.current_files)} />
+                  <KpiValue label="Snapshots" value={num(selectedRecord.current_snapshots)} />
+                  <KpiValue label="Schema fields" value={num(selectedRecord.current_schema_fields)} />
+                  <KpiValue label="Storage bytes" value={num(selectedRecord.current_bytes)} />
                 </Flex>
               </Flex>
             ) : (
