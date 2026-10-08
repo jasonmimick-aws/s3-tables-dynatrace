@@ -6,6 +6,7 @@ import { Overview } from "./pages/Overview";
 import { Topology } from "./pages/Topology";
 import { SchemaTimeline } from "./pages/SchemaTimeline";
 import { FinOps } from "./pages/FinOps";
+import { DataInsights } from "./pages/DataInsights";
 
 export const App = () => {
   return (
@@ -19,6 +20,7 @@ export const App = () => {
           <Route path="/topology" element={<Topology />} />
           <Route path="/schema" element={<SchemaTimeline />} />
           <Route path="/finops" element={<FinOps />} />
+          <Route path="/data" element={<DataInsights />} />
         </Routes>
       </PageLayout.Content>
     </PageLayout>

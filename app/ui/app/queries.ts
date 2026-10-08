@@ -181,3 +181,53 @@ export const PRICE_CARD: Array<{ driver: string; rate: string; source: string }>
   { driver: "Binpack bytes", rate: "$0.005 / GB processed", source: "Daily native compaction metric" },
   { driver: "Binpack objects", rate: "$0.002 / 1,000 objects", source: "Daily native compaction metric" },
 ];
+
+/* ----------------------------------------------------------------------------
+ * Data insights — business aggregates computed from the actual table rows by the
+ * collector (poc/s3tables_data_insights.py) and ingested as s3tables.data.* metrics.
+ * This is the "data-level" signal, distinct from the operational/IRC signal above.
+ * -------------------------------------------------------------------------- */
+export const DATA_METRICS = {
+  rowsAnalyzed: "s3tables.data.rows_analyzed",
+  distinctCarriers: "s3tables.data.distinct_carriers",
+  avgDepDelay: "s3tables.data.overall_avg_dep_delay_min",
+  cancelRate: "s3tables.data.cancel_rate_pct",
+  flightsByCarrier: "s3tables.data.flights_by_carrier",
+  avgDepDelayByCarrier: "s3tables.data.avg_dep_delay_by_carrier_min",
+  flightsByRoute: "s3tables.data.flights_by_route",
+} as const;
+
+const lastNonNull = (metric: string, field: string) =>
+  `timeseries v=max(${metric}), from:now()-24h
+| fieldsAdd ${field}=arrayLast(arrayRemoveNulls(v))
+| fieldsKeep ${field}`;
+
+export const DATA_SINGLE_VALUE = {
+  rowsAnalyzed: { field: "rows_analyzed", query: lastNonNull(DATA_METRICS.rowsAnalyzed, "rows_analyzed") },
+  distinctCarriers: { field: "distinct_carriers", query: lastNonNull(DATA_METRICS.distinctCarriers, "distinct_carriers") },
+  avgDepDelay: { field: "avg_dep_delay", query: lastNonNull(DATA_METRICS.avgDepDelay, "avg_dep_delay") },
+  cancelRate: { field: "cancel_rate", query: lastNonNull(DATA_METRICS.cancelRate, "cancel_rate") },
+} as const;
+
+/** Flights + avg departure delay per carrier (top carriers). */
+export const DATA_BY_CARRIER = `timeseries flights=max(${DATA_METRICS.flightsByCarrier}), dep=max(${DATA_METRICS.avgDepDelayByCarrier}), by:{carrier}, from:now()-24h
+| fieldsAdd flights_n=arrayLast(arrayRemoveNulls(flights)), dep_delay=arrayLast(arrayRemoveNulls(dep))
+| fieldsKeep carrier, flights_n, dep_delay
+| sort flights_n desc`;
+
+export interface CarrierRow {
+  carrier: string;
+  flights_n: number | null;
+  dep_delay: number | null;
+}
+
+/** Flights per route (top routes). */
+export const DATA_TOP_ROUTES = `timeseries v=max(${DATA_METRICS.flightsByRoute}), by:{route}, from:now()-24h
+| fieldsAdd flights=arrayLast(arrayRemoveNulls(v))
+| fieldsKeep route, flights
+| sort flights desc`;
+
+export interface RouteRow {
+  route: string;
+  flights: number | null;
+}
