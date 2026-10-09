@@ -77,3 +77,24 @@ Daily storage and compaction CloudWatch metrics have not reached their reporting
 - Verified today: two scheduled runs succeeded (09:32, 10:02); table now 1,315,752 rows / 391 snapshots; Dynatrace shows 79,469 requests and 2.35 GB downloaded in the last hour, ~20 ms avg latency, zero 5xx.
 - Observed overnight S3 Tables automatic compaction: data files dropped from 175 to 29 before today's writes.
 - Cost note: the schedule runs ~48 small CodeBuild builds/day. Disable with `aws scheduler update-schedule ... --state DISABLED` when not demoing.
+
+## Update — 2026-10-09: multi-domain lakehouse + productized integration/app
+
+- Productized the IRC prototype into `integration/` (Dynatrace Extensions 2.0, builds+signs to
+  a deployable zip) and `app/` (Dynatrace app via dt-app) on a shared collector
+  `poc/s3tables_core.py`. See `BUILD.md` and `integration/VERIFICATION.md`.
+- Added 4 big sample datasets alongside flights, all in bucket `airline-datalake-poc` (~38.6M
+  rows total across 5 namespaces/tables):
+  - `ops/flights` ~21.5M · `rides/trips` ~4.05M · `retail/orders` ~4M ·
+    `iot/sensor_readings` ~6M · `security/auth_events` ~3M
+- Framework: `poc/datasets.py` (schemas + generators), `poc/load_dataset.py` (create+append
+  over IRC), `poc/s3tables_insights_generic.py` (schema-agnostic data insights),
+  `poc/publish_all.py` (metadata + insights for every table).
+- App now has: Lakehouse overview (totals + per-dataset table), Topology (all 5 tables),
+  Datasets (generic data insights per domain), Schema timeline, Data insights (flights),
+  FinOps. Metric key fix: current-state tiles use `from:now()-24h` + last-non-null.
+- Verified live via DQL + ingest: 5 tables in topology, data insights for every domain
+  (trips→cash, orders→beauty, sensors→warning, auth→success/blocked).
+- Demo talk track + runbook: `DEMO.md`.
+- Repo pushed to GitLab: `gitlab.aws.dev/mimjasov/s3-tables-dynatrace`.
+- NOTE: Isengard creds expire ~daily — run `ada credentials update ...` before any live run.
