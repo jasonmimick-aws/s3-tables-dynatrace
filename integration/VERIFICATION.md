@@ -9,7 +9,7 @@ All tests run against the **live** table `airline-datalake-poc / ops / flights`.
 | 2 | Live Dynatrace metric ingest | **PASS** | POST `/api/v2/metrics/ingest` → `{"linesOk":5,"linesInvalid":0,"error":null}` (all 5 `s3tables.iceberg.*` lines accepted) |
 | 3 | Live Dynatrace event ingest | **PASS** | POST `/api/v2/events/ingest` (schema-state CUSTOM_INFO) → `{"reportCount":1,...,"status":"OK"}` |
 | 4 | Extension builds + signs | **PASS** | `dt-sdk build` exit 0 → signed `dist/custom_s3tables.iceberg-0.1.0.zip` (deployable to an ActiveGate) |
-| 5 | Dynatrace app builds | **PASS** | `npm run build` (Node v24.12) exit 0 — all four screens bundle |
+| 5 | Dynatrace app builds | **PASS** | `npm run lint` and `npm run build` (Node v24.12) exit 0 — two-view Overview + Explore app bundles; standard `dt-app deploy --dry-run` produces a validated 619 KB archive with UI JS/CSS/assets |
 
 ## Notes / known requirements
 

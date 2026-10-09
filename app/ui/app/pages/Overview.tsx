@@ -1,93 +1,99 @@
 import React, { useMemo } from "react";
 import { useDql } from "@dynatrace-sdk/react-hooks";
-import { Flex, Surface } from "@dynatrace/strato-components/layouts";
-import { Heading, Paragraph } from "@dynatrace/strato-components/typography";
-import { DataTable, type DataTableColumnDef } from "@dynatrace/strato-components/tables";
-import { MetricTile } from "../components/MetricTile";
+import { useNavigate } from "react-router-dom";
+import { QueryKpi } from "../components/QueryKpi";
 import { ChartTile } from "../components/ChartTile";
 import { QueryState } from "../components/QueryState";
+import { BentoCard, BentoGrid, Hero } from "../components/Bento";
 import {
   LAKEHOUSE_SINGLE_VALUE,
   OPS_CHARTS,
   DATASETS_TABLE,
-  DATASET_LABELS,
+  scopedSchemaChangesQuery,
   type DatasetRow,
 } from "../queries";
+import { describeDataset } from "../datasets";
 
-const num = (v: unknown) =>
-  v === null || v === undefined || Number.isNaN(Number(v)) ? "—" : Math.round(Number(v)).toLocaleString();
-
-interface DatasetDisplay {
-  dataset: string;
-  table: string;
-  rows: string;
-  files: string;
-  snaps: string;
-  fields: string;
-}
-
-const columns: DataTableColumnDef<DatasetDisplay>[] = [
-  { id: "dataset", header: "Dataset", accessor: "dataset", width: "2fr" },
-  { id: "table", header: "Namespace / table", accessor: "table", width: "1.5fr" },
-  { id: "rows", header: "Rows", accessor: "rows", width: "1fr" },
-  { id: "files", header: "Data files", accessor: "files", width: "1fr" },
-  { id: "snaps", header: "Snapshots", accessor: "snaps", width: "1fr" },
-  { id: "fields", header: "Columns", accessor: "fields", width: "1fr" },
-];
+const num = (value: unknown) =>
+  value === null || value === undefined || Number.isNaN(Number(value))
+    ? "—"
+    : Math.round(Number(value)).toLocaleString();
 
 export const Overview = () => {
+  const navigate = useNavigate();
   const datasets = useDql<DatasetRow>({ query: DATASETS_TABLE });
-
-  const rows = useMemo<DatasetDisplay[]>(
-    () =>
-      (datasets.data?.records ?? []).map((r) => {
-        const key = `${r.ns}/${r.table}`;
-        return {
-          dataset: DATASET_LABELS[key] ?? key,
-          table: key,
-          rows: num(r.rows_n),
-          files: num(r.files_n),
-          snaps: num(r.snaps_n),
-          fields: num(r.fields_n),
-        };
-      }),
-    [datasets.data],
-  );
+  const changes = useDql({ query: scopedSchemaChangesQuery([]) });
+  const rows = useMemo(() => datasets.data?.records ?? [], [datasets.data]);
 
   return (
-    <Flex flexDirection="column" gap={24} padding={32}>
-      <Flex flexDirection="column" gap={4}>
-        <Heading>Lakehouse overview</Heading>
-        <Paragraph>
-          Amazon S3 Tables + Apache Iceberg, surfaced in Dynatrace. One table bucket{" "}
-          <code>airline-datalake-poc</code> with multiple domains · AWS account 347830095179 · us-east-1.
-        </Paragraph>
-      </Flex>
+    <main className="app-page">
+      <Hero
+        kicker="AMAZON S3 TABLES OBSERVABILITY"
+        title="Operational intelligence for your Iceberg tables."
+        description="Bring native AWS request telemetry together with Iceberg catalog metadata, data-level signals, change awareness, and cost—across every namespace and table discovered in the connected environment."
+        aside={<span>LIVE CATALOG · AWS TELEMETRY</span>}
+      />
 
-      <Heading level={5}>Lakehouse totals</Heading>
-      <Flex gap={16} flexFlow="wrap">
-        <MetricTile {...LAKEHOUSE_SINGLE_VALUE.rows} label="Total rows" />
-        <MetricTile {...LAKEHOUSE_SINGLE_VALUE.files} label="Total data files" />
-        <MetricTile {...LAKEHOUSE_SINGLE_VALUE.snapshots} label="Total snapshots" />
-        <MetricTile {...LAKEHOUSE_SINGLE_VALUE.tables} label="Tables" />
-      </Flex>
+      <BentoGrid>
+        <QueryKpi {...LAKEHOUSE_SINGLE_VALUE.rows} label="rows under observation" eyebrow="LAKEHOUSE SCALE" accent="#73e5ff" />
+        <QueryKpi {...LAKEHOUSE_SINGLE_VALUE.tables} label="managed Iceberg tables" eyebrow="CATALOG" accent="#a9f27c" />
+        <QueryKpi {...LAKEHOUSE_SINGLE_VALUE.files} label="active data files" eyebrow="STORAGE SHAPE" accent="#ffc857" />
+        <QueryKpi {...LAKEHOUSE_SINGLE_VALUE.snapshots} label="Iceberg snapshots" eyebrow="CHANGE HISTORY" accent="#a995ff" />
 
-      <Heading level={5}>Datasets</Heading>
-      <Surface style={{ padding: 16 }}>
-        {datasets.isLoading || datasets.error ? (
-          <QueryState isLoading={datasets.isLoading} error={datasets.error} />
-        ) : (
-          <DataTable data={rows} columns={columns} />
-        )}
-      </Surface>
+        <BentoCard className="bento-card--full" eyebrow="DATASET CATALOG" title="What is in this lakehouse?" accent="#73e5ff">
+          {datasets.isLoading || datasets.error ? (
+            <QueryState isLoading={datasets.isLoading} error={datasets.error} />
+          ) : (
+            <div className="catalog-list">
+              {rows.map((row) => {
+                const key = `${row.ns}/${row.table}`;
+                const dataset = describeDataset(String(row.ns), String(row.table), rows.indexOf(row));
+                return (
+                  <button
+                    type="button"
+                    className="catalog-row catalog-row--button"
+                    key={key}
+                    onClick={() => navigate(`/explore?datasets=${encodeURIComponent(key)}`)}
+                  >
+                    <div>
+                      <div className="catalog-row__label" style={{ color: dataset.accent }}>
+                        {dataset.label}
+                      </div>
+                      <div className="bento-copy">{dataset.description} · Click to explore</div>
+                    </div>
+                    <div className="catalog-row__path">{key}</div>
+                    <div className="catalog-stat"><strong>{num(row.rows_n)}</strong><span>rows</span></div>
+                    <div className="catalog-stat"><strong>{num(row.files_n)}</strong><span>files</span></div>
+                    <div className="catalog-stat"><strong>{num(row.snaps_n)}</strong><span>snapshots</span></div>
+                    <div className="catalog-stat"><strong>{num(row.fields_n)}</strong><span>columns</span></div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </BentoCard>
 
-      <Heading level={5}>Native AWS/S3 Tables request telemetry (bucket-wide)</Heading>
-      <Flex gap={16} flexFlow="wrap">
-        <ChartTile query={OPS_CHARTS.requests} title="Request volume (per minute)" variant="line" />
-        <ChartTile query={OPS_CHARTS.latency} title="Request latency (ms)" variant="line" />
-        <ChartTile query={OPS_CHARTS.bytes} title="Data transferred (bytes/min)" variant="area" />
-        <ChartTile query={OPS_CHARTS.errors} title="Reliability — 4xx / 5xx" variant="area" />
-      </Flex>
-    </Flex>
+        <BentoCard className="bento-card--narrow" eyebrow="CONTRACT CHANGES · 30D" title={`${changes.data?.records?.length ?? 0} detected`} accent={(changes.data?.records?.length ?? 0) > 0 ? "#ffc857" : "#a9f27c"}>
+          <p className="bento-copy">Only actual schema changes are counted—not routine state observations.</p>
+        </BentoCard>
+        <BentoCard className="bento-card--wide" eyebrow="INVESTIGATE" title="Move from estate view to a scoped analysis" accent="#73e5ff">
+          <p className="bento-copy">Choose any table above, or open Explore to compare a subset across operations, data profile, changes, and cost.</p>
+          <button type="button" className="primary-action" onClick={() => navigate("/explore")}>Explore all datasets →</button>
+        </BentoCard>
+
+        <BentoCard className="bento-card--medium bento-card--tall" eyebrow="NATIVE AWS" title="Request volume" accent="#73e5ff">
+          <ChartTile query={OPS_CHARTS.requests} title="Requests per minute" variant="line" height={270} />
+        </BentoCard>
+        <BentoCard className="bento-card--medium bento-card--tall" eyebrow="PERFORMANCE" title="Request latency" accent="#a9f27c">
+          <ChartTile query={OPS_CHARTS.latency} title="First byte and total latency" variant="line" height={270} />
+        </BentoCard>
+        <BentoCard className="bento-card--wide bento-card--tall" eyebrow="THROUGHPUT" title="Data transferred" accent="#a995ff">
+          <ChartTile query={OPS_CHARTS.bytes} title="Downloaded and uploaded bytes" variant="area" height={250} />
+        </BentoCard>
+        <BentoCard className="bento-card--narrow bento-card--tall" eyebrow="RELIABILITY" title="Errors" accent="#ff7f7f">
+          <ChartTile query={OPS_CHARTS.errors} title="4xx / 5xx" variant="area" height={250} />
+        </BentoCard>
+      </BentoGrid>
+    </main>
   );
 };

@@ -11,7 +11,7 @@ in AWS `347830095179` / us-east-1, Dynatrace tenant `hgd83841`
 |---|---|
 | `poc/s3tables_core.py` | shared collector — reads Iceberg state over the S3 Tables IRC; serializes metrics, events, topology |
 | `integration/` | Dynatrace Extensions 2.0 extension (runs on an ActiveGate) built on the collector |
-| `app/` | Dynatrace app (dt-app) — Overview, Topology, Schema timeline, FinOps |
+| `app/` | Dynatrace app (dt-app) — customer-neutral Overview + URL-scoped Explore workspace |
 
 ## Prerequisites
 

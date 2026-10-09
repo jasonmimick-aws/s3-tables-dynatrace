@@ -43,38 +43,26 @@ at the local-dev-server URL the CLI prints.
 > where's the opportunity to go deeper? This is a live POC against a real multi-domain
 > lakehouse: airline, rides, retail, IoT, and security data — about 38 million rows."
 
-### 1 · Overview (45s)  — *tab: Overview*
-> "Top line: lakehouse-wide totals — rows, data files, snapshots, and five tables — all
-> computed live from the Iceberg catalog. Below, every dataset with its row, file, snapshot,
-> and column counts. And at the bottom, the **native** `AWS/S3/Tables` CloudWatch metrics —
-> request volume, latency, bytes, and 4xx/5xx — streamed into Dynatrace via Metric Streams.
-> That native plane is what ships today."
+### 1 · Overview (55s)  — *view: Overview*
+> "The application discovers the connected customer's namespaces and tables at runtime—this
+> demo happens to contain five domains. The bento KPIs summarize the current catalog, while
+> the dataset catalog puts rows, files, snapshots, and columns beside each table. Native
+> `AWS/S3/Tables` request, latency, throughput, and error telemetry completes the operational
+> picture."
 
-### 2 · Topology (40s)  — *tab: Topology*
-> "Here's the piece that does **not** exist in any observability tool today: the S3 Tables
-> lakehouse as first-class topology — table bucket → namespace → table. Pick any table and
-> you get its current Iceberg state: rows, data files, snapshots, schema fields. This comes
-> from the Iceberg REST Catalog, not CloudWatch."
+### 2 · Explore (2m 30s)  — *view: Explore*
+> "Click a table on Overview to enter Explore with that dataset already selected, or use the
+> chips to compare any subset. One scope drives the entire investigation. Iceberg state
+> shows rows, files, snapshots, and current table metadata; Operations adds native AWS
+> request, latency, throughput, and errors."
+>
+> "Data profile adds bounded, low-cardinality aggregates without moving raw rows into
+> Dynatrace. Change intelligence separates actual contract changes from state heartbeats—we
+> can see the real `co2_estimate_kg` addition and inspect the current field contract when one
+> table is selected. Cost & capacity closes the loop with storage, file-monitoring, request,
+> and per-table allocation estimates."
 
-### 3 · Datasets — data insights (60s)  — *tab: Datasets*
-> "And we don't stop at structure. For every domain we sample the actual rows and compute
-> business aggregates — top categories and numeric averages — ingested as Dynatrace metrics.
-> Trips break down by payment type; orders by product category; IoT by device status; auth
-> events by result — look, you can see success vs. blocked vs. challenged right here. That's
-> data-level signal sitting next to operational signal, in one platform."
-
-### 4 · Schema timeline (40s)  — *tab: Schema timeline*
-> "Iceberg is schema-evolving storage, so schema change is an operational event. Here's the
-> current 16-field flights schema, and the timeline of schema-state and schema-change events
-> — including when we added `co2_estimate_kg`. Now a schema change can be correlated with a
-> compaction storm, a latency spike, or a cost jump."
-
-### 5 · FinOps (40s)  — *tab: FinOps*
-> "Because we have live Iceberg state, we can turn it into a running cost estimate — storage,
-> object monitoring, request costs — and project it to airline scale. Estimates, not billing,
-> but driven by real table state and reconciled against native daily storage metrics."
-
-### 6 · Close — the pitch (30s)
+### 3 · Close — the pitch (30s)
 > "So two planes: the native CloudWatch plane that ships today, and the IRC intelligence
 > plane — topology, schema, snapshots, and data-level insights — that we prototyped here on
 > Dynatrace's own AppEngine and Extensions 2.0 frameworks. The opportunity is to productize

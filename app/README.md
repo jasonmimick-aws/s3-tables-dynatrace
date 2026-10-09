@@ -4,16 +4,21 @@ A Dynatrace App (AppEngine, built with the `dt-app` App Toolkit) that visualizes
 S3 Tables telemetry — both the native `AWS/S3/Tables` CloudWatch metrics and the
 IRC-derived Iceberg intelligence from the companion [extension](../integration/README.md).
 
-## Screens
+## Experience
 
-1. **Overview** — single-value tiles (rows, files, snapshots, schema fields) plus native
-   request volume, latency, and 4xx/5xx reliability charts.
-2. **Topology** — browse table bucket → namespace → table; select a table for its current
-   metrics.
-3. **Schema timeline** — `S3 Tables schema state`/`schema change` events over time plus the
-   current schema field list.
-4. **FinOps** — storage/request cost estimate from live Iceberg state and native request
-   telemetry.
+The app is customer-neutral and discovers datasets dynamically from live metric dimensions.
+Its two decision-oriented views are:
+
+1. **Overview** — customer-neutral estate health, dynamically discovered table catalog,
+   recent contract-change signal, and native AWS request/performance/reliability telemetry.
+   Clicking any table opens a scoped investigation.
+2. **Explore** — one URL-scoped workspace for a single table, arbitrary subset, or all
+   datasets. It combines Iceberg state, operational activity, sampled data profile, actual
+   schema changes/current contract, and cost/capacity allocation.
+
+The former standalone Topology, Schema Timeline, Data Insights, and FinOps tabs were merged
+into Explore so metadata appears inside an investigation rather than as isolated,
+read-only destinations.
 
 All screens use Strato components and DQL (`@dynatrace-sdk/client-query`) against the metric
 keys and event names defined in [`../design/integration-build-plan.md`](../design/integration-build-plan.md).

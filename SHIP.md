@@ -2,8 +2,9 @@
 
 This solution has two independently deployable artifacts:
 
-1. **Dynatrace AppEngine app** (`app/`) — user experience: lakehouse overview, topology,
-   datasets, schema timeline, data insights, and FinOps.
+1. **Dynatrace AppEngine app** (`app/`) — customer-neutral two-view experience: Overview
+   plus a URL-scoped Explore workspace, with dynamic dataset discovery and arbitrary
+   multi-dataset filtering across operations, data profile, changes, and cost.
 2. **Dynatrace Extensions 2.0 package** (`integration/`) — collection: reads the S3 Tables
    Iceberg REST Catalog and reports metrics, events, and topology.
 
@@ -25,7 +26,7 @@ export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
 cd app
 npm ci
 npm run lint
-npx dt-app deploy --optimize --enable-code-splitting
+npx dt-app deploy
 ```
 
 This builds and installs app ID `com.amazonaws.s3tables.observability` in the configured
@@ -33,10 +34,15 @@ This builds and installs app ID `com.amazonaws.s3tables.observability` in the co
 `DT_APP_OAUTH_CLIENT_ID` and `DT_APP_OAUTH_CLIENT_SECRET`. It does **not** publish to the
 public Dynatrace Hub.
 
+> Keep the standard packaging path for this release. With the currently installed App
+> Toolkit, `--optimize --enable-code-splitting` produced a manifest-only archive; the
+> standard build produced the validated 619 KB bundle containing `ui/main.js`, CSS, and
+> assets.
+
 To generate a validated bundle without installing it:
 
 ```bash
-npx dt-app deploy --dry-run --optimize --enable-code-splitting
+npx dt-app deploy --dry-run
 # app/out/artifact.zip
 ```
 

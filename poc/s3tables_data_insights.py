@@ -115,6 +115,15 @@ def to_metric_lines(di: DataInsights) -> list[str]:
         carrier = _sanitize(c["carrier"])
         lines.append(f's3tables.data.flights_by_carrier,{base},carrier="{carrier}" {c["flights"]}')
         lines.append(f's3tables.data.avg_dep_delay_by_carrier_min,{base},carrier="{carrier}" {c["avg_dep_delay"]}')
+        # Also publish to the schema-agnostic contract used by the unified
+        # Data Intelligence screen across every lakehouse dataset.
+        lines.append(f's3tables.data.category_count,{base},category="{carrier}" {c["flights"]}')
+    lines.append(
+        f's3tables.data.numeric_avg,{base},field="avg_dep_delay_min" {di.overall_avg_dep_delay}'
+    )
+    lines.append(
+        f's3tables.data.numeric_avg,{base},field="cancel_rate_pct" {di.cancel_rate_pct}'
+    )
     for r in di.top_routes:
         route = _sanitize(r["route"])
         lines.append(f's3tables.data.flights_by_route,{base},route="{route}" {r["flights"]}')

@@ -298,3 +298,99 @@ export const DATASET_LABELS: Record<string, string> = {
   "iot/sensor_readings": "IoT device telemetry",
   "security/auth_events": "Auth / access events",
 };
+
+/* ----------------------------------------------------------------------------
+ * UX v2 — dataset-scoped query builders. Empty selection means all datasets.
+ * -------------------------------------------------------------------------- */
+const selectedDatasets = (selected: string[]) =>
+  selected.map((key) => {
+    const separator = key.indexOf("/");
+    return {
+      namespace: separator >= 0 ? key.slice(0, separator) : key,
+      table: separator >= 0 ? key.slice(separator + 1) : "",
+    };
+  });
+
+const scopeFilter = (
+  selected: string[],
+  namespaceField = "ns",
+  tableField = "table",
+) => {
+  if (selected.length === 0) return "";
+  const clauses = selectedDatasets(selected).map(
+    (dataset) => `(${namespaceField} == "${dataset.namespace}" and ${tableField} == "${dataset.table}")`,
+  );
+  return clauses.length > 0 ? `\n| filter ${clauses.join(" or ")}` : "";
+};
+
+const nativeNamespaceFilter = (selected: string[]) => {
+  if (selected.length === 0) return "";
+  const namespaces = selectedDatasets(selected).map((dataset) => `namespace == "${dataset.namespace}"`);
+  return namespaces.length > 0 ? `\n| filter ${namespaces.join(" or ")}` : "";
+};
+
+export const scopedCatalogQuery = (selected: string[]) => `timeseries rows=max(${ICEBERG_METRICS.rows}), files=max(${ICEBERG_METRICS.files}), bytes=max(${ICEBERG_METRICS.storageBytes}), snaps=max(${ICEBERG_METRICS.snapshots}), fields=max(${ICEBERG_METRICS.schemaFields}), by:{ns,table}, from:now()-24h
+| fieldsAdd rows_n=arrayLast(arrayRemoveNulls(rows)), files_n=arrayLast(arrayRemoveNulls(files)), bytes_n=arrayLast(arrayRemoveNulls(bytes)), snaps_n=arrayLast(arrayRemoveNulls(snaps)), fields_n=arrayLast(arrayRemoveNulls(fields))
+| filter isNotNull(rows_n)${scopeFilter(selected)}
+| fieldsKeep ns, table, rows_n, files_n, bytes_n, snaps_n, fields_n
+| sort rows_n desc`;
+
+export interface ScopedDatasetRow extends DatasetRow {
+  bytes_n: number | null;
+}
+
+export const scopedDataTotalsQuery = (selected: string[]) => `timeseries sampled=max(s3tables.data.rows_analyzed), by:{ns,table}, from:now()-24h
+| fieldsAdd rows=arrayLast(arrayRemoveNulls(sampled))
+| filter isNotNull(rows)${scopeFilter(selected)}
+| summarize rows_analyzed=sum(rows), tables=count()`;
+
+export const scopedCategoryQuery = (selected: string[]) => `timeseries v=max(s3tables.data.category_count), by:{ns,table,category}, from:now()-24h
+| fieldsAdd count=arrayLast(arrayRemoveNulls(v))
+| filter isNotNull(count)${scopeFilter(selected)}
+| fieldsKeep ns, table, category, count
+| sort count desc`;
+
+export const scopedNumericQuery = (selected: string[]) => `timeseries v=max(s3tables.data.numeric_avg), by:{ns,table,field}, from:now()-24h
+| fieldsAdd average=arrayLast(arrayRemoveNulls(v))
+| filter isNotNull(average)${scopeFilter(selected)}
+| fieldsKeep ns, table, field, average
+| sort ns asc, table asc, field asc`;
+
+export const scopedSchemaEventsQuery = (selected: string[]) => `fetch events, from:now()-30d
+| filter event.name == "S3 Tables schema change" or event.name == "S3 Tables schema state"${scopeFilter(selected, "namespace", "table")}
+| fields timestamp, event.name, bucket, namespace, table, schema_id, row_count, file_count, snapshot_count, storage_bytes, added, removed, fields
+| sort timestamp desc
+| limit 250`;
+
+export const scopedSchemaChangesQuery = (selected: string[]) => `fetch events, from:now()-30d
+| filter event.name == "S3 Tables schema change"${scopeFilter(selected, "namespace", "table")}
+| fields timestamp, namespace, table, schema_id, added, removed
+| sort timestamp desc
+| limit 100`;
+
+export const scopedCostTableQuery = (selected: string[]) => `timeseries bytes=max(${ICEBERG_METRICS.storageBytes}), objects=max(${ICEBERG_METRICS.files}), by:{ns,table}, from:now()-24h
+| fieldsAdd current_bytes=arrayLast(arrayRemoveNulls(bytes)), current_objects=arrayLast(arrayRemoveNulls(objects))
+| filter isNotNull(current_bytes)${scopeFilter(selected)}
+| fieldsAdd storage_usd=current_bytes/1073741824*${RATES.storagePerGbMonth}, monitoring_usd=current_objects/1000*${RATES.monitoringPer1kObjects}
+| fieldsAdd baseline_usd=storage_usd+monitoring_usd
+| fieldsKeep ns, table, current_bytes, current_objects, storage_usd, monitoring_usd, baseline_usd
+| sort baseline_usd desc`;
+
+export const scopedCostSummaryQuery = (selected: string[]) => `timeseries bytes=max(${ICEBERG_METRICS.storageBytes}), objects=max(${ICEBERG_METRICS.files}), by:{ns,table}, from:now()-24h
+| fieldsAdd current_bytes=arrayLast(arrayRemoveNulls(bytes)), current_objects=arrayLast(arrayRemoveNulls(objects))
+| filter isNotNull(current_bytes)${scopeFilter(selected)}
+| summarize storage_bytes=sum(current_bytes), data_files=sum(current_objects)
+| fieldsAdd storage_usd=storage_bytes/1073741824*${RATES.storagePerGbMonth}, monitoring_usd=data_files/1000*${RATES.monitoringPer1kObjects}
+| fieldsAdd baseline_usd=storage_usd+monitoring_usd`;
+
+export const scopedRequestCostQuery = (selected: string[]) => `timeseries gets=sum(cloud.aws.s3.tables.getRequestsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), puts=sum(cloud.aws.s3.tables.putRequestsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), by:{namespace}, from:now()-2h${nativeNamespaceFilter(selected)}
+| fieldsAdd request_usd=coalesce(arraySum(gets),0)/1000*${RATES.getPer1k}+coalesce(arraySum(puts),0)/1000*${RATES.putPer1k}
+| summarize request_usd=sum(request_usd)`;
+
+export const scopedRequestTrendQuery = (selected: string[]) => `timeseries requests=sum(cloud.aws.s3.tables.allRequestsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), by:{namespace}, interval:1m, from:now()-2h${nativeNamespaceFilter(selected)}`;
+
+export const scopedLatencyQuery = (selected: string[]) => `timeseries first_byte_ms=avg(cloud.aws.s3.tables.firstByteLatencyByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), total_ms=avg(cloud.aws.s3.tables.totalRequestLatencyByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), by:{namespace}, interval:1m, from:now()-2h${nativeNamespaceFilter(selected)}`;
+
+export const scopedErrorsQuery = (selected: string[]) => `timeseries errors_4xx=sum(cloud.aws.s3.tables.4xxErrorsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), errors_5xx=sum(cloud.aws.s3.tables.5xxErrorsByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), by:{namespace}, interval:1m, from:now()-2h${nativeNamespaceFilter(selected)}`;
+
+export const scopedBytesQuery = (selected: string[]) => `timeseries downloaded=sum(cloud.aws.s3.tables.bytesDownloadedByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), uploaded=sum(cloud.aws.s3.tables.bytesUploadedByAccountIdFilterIdNamespaceRegionTableBucketNameTableName), by:{namespace}, interval:1m, from:now()-2h${nativeNamespaceFilter(selected)}`;
