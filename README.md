@@ -155,7 +155,8 @@ shared collector and verified live (see [`integration/VERIFICATION.md`](integrat
 - **[`poc/s3tables_core.py`](poc/s3tables_core.py)** — the shared, hardened collector both
   build on.
 
-Build, test, and deploy runbook: [`BUILD.md`](BUILD.md).
+Build, test, and deploy runbook: [`BUILD.md`](BUILD.md). End-user guide:
+[`docs/app-user-guide.md`](docs/app-user-guide.md).
 
 ## Repository layout
 

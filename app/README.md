@@ -20,6 +20,8 @@ The former standalone Topology, Schema Timeline, Data Insights, and FinOps tabs 
 into Explore so metadata appears inside an investigation rather than as isolated,
 read-only destinations.
 
+End-user documentation: [`../docs/app-user-guide.md`](../docs/app-user-guide.md).
+
 All screens use Strato components and DQL (`@dynatrace-sdk/client-query`) against the metric
 keys and event names defined in [`../design/integration-build-plan.md`](../design/integration-build-plan.md).
 

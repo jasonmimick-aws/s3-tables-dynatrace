@@ -44,7 +44,12 @@ export const Explore = () => {
   const [params, setParams] = useSearchParams();
   const initial = params.get("datasets")?.split(",").filter(Boolean) ?? [];
   const [selected, setSelected] = useState<string[]>(initial);
+  const [showGuide, setShowGuide] = useState(false);
   const catalog = useDatasetCatalog();
+
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const setScope = (next: string[]) => {
     setSelected(next);
@@ -100,8 +105,28 @@ export const Explore = () => {
       <DatasetScope selected={selected} onChange={setScope} datasets={catalog.datasets} />
 
       <nav className="section-nav" aria-label="Explore sections">
-        <a href="#state">Iceberg state</a><a href="#operations">Operations</a><a href="#data-profile">Data profile</a><a href="#changes">Changes</a><a href="#cost">Cost</a>
+        {[
+          ["state", "Iceberg state"],
+          ["operations", "Operations"],
+          ["data-profile", "Data profile"],
+          ["changes", "Changes"],
+          ["cost", "Cost"],
+        ].map(([id, label]) => (
+          <button type="button" key={id} onClick={() => scrollTo(id)}>{label}</button>
+        ))}
+        <button type="button" className="section-nav__guide" onClick={() => setShowGuide((visible) => !visible)}>
+          {showGuide ? "Hide guide" : "How to use Explore"}
+        </button>
       </nav>
+
+      {showGuide && (
+        <aside className="guide-panel">
+          <div><span>1</span><p><strong>Set scope.</strong> Leave All selected for estate-wide analysis, choose one table for field detail, or select several to compare.</p></div>
+          <div><span>2</span><p><strong>Follow the investigation.</strong> Start with Iceberg state, correlate operational activity, inspect sampled data signals, then check contract changes and cost.</p></div>
+          <div><span>3</span><p><strong>Drill in.</strong> Clicking a table isolates it; the URL stores the selection so an investigation can be bookmarked or shared.</p></div>
+          <div><span>4</span><p><strong>Interpret safely.</strong> Data profiles are bounded aggregates, schema changes are signals rather than automatic incidents, and cost values are estimates—not billing records.</p></div>
+        </aside>
+      )}
 
       <section id="state" className="explore-section">
         <div className="section-heading"><span>01</span><div><h2>Iceberg state</h2><p>Catalog metadata embedded in the investigation—not a separate topology destination.</p></div></div>
