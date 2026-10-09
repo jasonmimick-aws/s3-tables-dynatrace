@@ -7,6 +7,7 @@ import { Topology } from "./pages/Topology";
 import { SchemaTimeline } from "./pages/SchemaTimeline";
 import { FinOps } from "./pages/FinOps";
 import { DataInsights } from "./pages/DataInsights";
+import { Datasets } from "./pages/Datasets";
 
 export const App = () => {
   return (
@@ -18,6 +19,7 @@ export const App = () => {
         <Routes>
           <Route path="/" element={<Overview />} />
           <Route path="/topology" element={<Topology />} />
+          <Route path="/datasets" element={<Datasets />} />
           <Route path="/schema" element={<SchemaTimeline />} />
           <Route path="/finops" element={<FinOps />} />
           <Route path="/data" element={<DataInsights />} />

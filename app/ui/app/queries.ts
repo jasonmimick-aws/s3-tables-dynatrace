@@ -231,3 +231,70 @@ export interface RouteRow {
   route: string;
   flights: number | null;
 }
+
+/* ----------------------------------------------------------------------------
+ * Lakehouse-wide — totals and a per-dataset table across every namespace/table.
+ * -------------------------------------------------------------------------- */
+const lakehouseTotal = (metric: string, reducer: "sum" | "count") => `timeseries v=max(${metric}), by:{ns,table}, from:now()-24h
+| fieldsAdd last=arrayLast(arrayRemoveNulls(v))
+| filter isNotNull(last)
+| summarize total=${reducer === "sum" ? "sum(last)" : "count()"}`;
+
+export const LAKEHOUSE_SINGLE_VALUE = {
+  rows: { field: "total", query: lakehouseTotal(ICEBERG_METRICS.rows, "sum") },
+  files: { field: "total", query: lakehouseTotal(ICEBERG_METRICS.files, "sum") },
+  snapshots: { field: "total", query: lakehouseTotal(ICEBERG_METRICS.snapshots, "sum") },
+  tables: { field: "total", query: lakehouseTotal(ICEBERG_METRICS.rows, "count") },
+} as const;
+
+export const DATASETS_TABLE = `timeseries rows=max(${ICEBERG_METRICS.rows}), files=max(${ICEBERG_METRICS.files}), snaps=max(${ICEBERG_METRICS.snapshots}), fields=max(${ICEBERG_METRICS.schemaFields}), by:{ns,table}, from:now()-24h
+| fieldsAdd rows_n=arrayLast(arrayRemoveNulls(rows)), files_n=arrayLast(arrayRemoveNulls(files)), snaps_n=arrayLast(arrayRemoveNulls(snaps)), fields_n=arrayLast(arrayRemoveNulls(fields))
+| filter isNotNull(rows_n)
+| fieldsKeep ns, table, rows_n, files_n, snaps_n, fields_n
+| sort rows_n desc`;
+
+export interface DatasetRow {
+  ns: string;
+  table: string;
+  rows_n: number | null;
+  files_n: number | null;
+  snaps_n: number | null;
+  fields_n: number | null;
+}
+
+/* ----------------------------------------------------------------------------
+ * Generic data insights across every dataset (from s3tables.data.* metrics).
+ * -------------------------------------------------------------------------- */
+export const CATEGORY_BY_TABLE = `timeseries v=max(s3tables.data.category_count), by:{ns,table,category}, from:now()-24h
+| fieldsAdd c=arrayLast(arrayRemoveNulls(v))
+| filter isNotNull(c)
+| fieldsKeep ns, table, category, c
+| sort c desc`;
+
+export interface CategoryRow {
+  ns: string;
+  table: string;
+  category: string;
+  c: number | null;
+}
+
+export const NUMERIC_AVG_BY_TABLE = `timeseries v=max(s3tables.data.numeric_avg), by:{ns,table,field}, from:now()-24h
+| fieldsAdd a=arrayLast(arrayRemoveNulls(v))
+| filter isNotNull(a)
+| fieldsKeep ns, table, field, a`;
+
+export interface NumericAvgRow {
+  ns: string;
+  table: string;
+  field: string;
+  a: number | null;
+}
+
+/** Human labels for the lakehouse datasets. */
+export const DATASET_LABELS: Record<string, string> = {
+  "ops/flights": "Airline on-time (BTS)",
+  "rides/trips": "NYC-taxi-style trips",
+  "retail/orders": "E-commerce orders",
+  "iot/sensor_readings": "IoT device telemetry",
+  "security/auth_events": "Auth / access events",
+};

@@ -13,6 +13,9 @@ export const Header = () => {
         <AppHeader.NavigationItem as={Link} to="/topology">
           Topology
         </AppHeader.NavigationItem>
+        <AppHeader.NavigationItem as={Link} to="/datasets">
+          Datasets
+        </AppHeader.NavigationItem>
         <AppHeader.NavigationItem as={Link} to="/schema">
           Schema timeline
         </AppHeader.NavigationItem>
