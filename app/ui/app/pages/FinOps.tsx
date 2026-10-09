@@ -53,7 +53,7 @@ export const FinOps = () => {
   const scaleRows = useMemo<ScaleRow[]>(() => {
     const recs = scale.data?.records ?? [];
     return recs.map((r) => ({
-      scale: String(r.scale ?? ""),
+      scale: typeof r.scale === "string" ? r.scale : "",
       gb: Number(r.gb ?? 0).toLocaleString(),
       storage_usd: usd(r.storage_usd),
     }));

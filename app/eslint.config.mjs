@@ -101,6 +101,14 @@ export default defineConfig([
     },
   },
   {
+    // DQL contains long Dynatrace metric keys which are not secrets. Keep the
+    // secret scanner enabled everywhere else, including actual source/config.
+    files: ["**/queries.ts"],
+    rules: {
+      "noSecrets/no-secrets": "off",
+    },
+  },
+  {
     files: ["**/*.action.ts", "**/*.widget.tsx"],
     ignores: ["**/*.test.ts", "**/test-utils.ts"],
     languageOptions: {

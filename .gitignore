@@ -14,6 +14,7 @@ __pycache__/
 # node / dt-app build artifacts
 node_modules/
 app/dist/
+app/out/
 app/.dt-app/build/
 app/.dt-app/logs/
 
