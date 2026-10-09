@@ -38,26 +38,31 @@ The FinOps dashboard converts live Iceberg storage and object counts into an imm
 - PUT: $0.005/1,000 requests
 - Binpack compaction: $0.005/GB plus $0.002/1,000 objects processed
 
-These are estimates, not billing records, and actual rates vary by Region and usage. The same dashboard can incorporate native request and compaction metrics as they arrive.
+These are estimates, not billing records, and actual rates vary by Region and usage. The
+Dynatrace App combines native request metrics with IRC-derived storage and file state.
 
 ## What the POC proves
 
 1. S3 Tables can feed Dynatrace through a native AWS Metric Streams architecture.
-2. A real airline dataset can be loaded and queried through the standard Iceberg REST Catalog path.
+2. Multiple real-world dataset domains can be loaded and queried through the standard Iceberg REST Catalog path.
 3. Dynatrace can surface immediate table-level state that CloudWatch does not provide.
 4. Schema evolution can be captured as an observability event and correlated with table growth, snapshots, maintenance, latency, and estimated cost.
+5. A native Dynatrace App can present the operational and Iceberg intelligence planes as one investigation workflow.
 
-## Dashboards
+## Dynatrace App experience
 
-**Airline Data Lake — Operations** presents native `AWS/S3/Tables` request volume, latency, data transferred, and 4xx/5xx reliability alongside live Iceberg state—rows, data files, snapshots, and schema field count.
+The customer-neutral **Overview** discovers the connected environment's namespaces and
+tables, then combines estate KPIs, current Iceberg metadata, contract-change awareness, and
+native AWS telemetry.
 
-![Operations dashboard](docs/images/operations-dashboard.png)
+![Amazon S3 Tables Observability Overview](docs/images/app-overview-long.png)
 
-**FinOps & Intelligence** converts live Iceberg state and native request telemetry into operational cost estimates, with request cost drivers, an airline-scale storage projection, and current per-table intelligence.
+The **Explore** workspace keeps one dataset, any subset, or all tables in scope while moving
+through Iceberg state, operational activity, sampled data profile, actual schema changes,
+and cost/capacity.
 
-![FinOps and Intelligence dashboard](docs/images/finops-dashboard.png)
+![Amazon S3 Tables Observability Explore](docs/images/app-explore-long.png)
 
-- Airline Data Lake — Operations
-- S3 Tables Airline Data Lake — FinOps & Intelligence
-
-The next product-level step is to package the IRC collector as a supported Dynatrace integration, with first-class table-bucket, namespace, and table topology.
+The next product-level step is for Dynatrace to support this application and its IRC
+collector as a native integration, including first-class table-bucket, namespace, and table
+entities plus supported installation and lifecycle management.

@@ -61,9 +61,8 @@ npm run start     # local dev server (interactive Dynatrace login)
 npm run deploy    # deploy to the environment (needs an app OAuth client)
 ```
 
-## Dashboards (already live)
+## Legacy validation dashboards
 
-The two Dynatrace dashboards in `dashboards/` read the same metric keys and render the
-ingested data today:
-- Operations: `f00cf22e-4c6c-4847-bad1-6d2be5780ffc`
-- FinOps & Intelligence: `0ac17116-8d77-4201-b96d-925bc939c2b7`
+The YAML definitions in `dashboards/` were used to validate metric keys and DQL before the
+AppEngine experience existed. They remain as engineering reference only; the supported
+customer UX proposed by this project is the **Amazon S3 Tables Observability App**.

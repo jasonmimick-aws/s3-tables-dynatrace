@@ -74,32 +74,14 @@ data-file counts, current storage bytes, snapshot count and current snapshot, sc
 count, and explicit **schema-change events**.
 
 With both planes flowing, the POC demonstrates the capability that matters: during the
-workload the table schema evolved from 15 to 16 fields (adding `co2_estimate_kg`), and
-Dynatrace captured that change as an event **correlated on the same dashboards** with table
-growth, snapshot churn, maintenance, latency, and estimated cost. Two dashboards present it:
-an **Operations** view and a **FinOps & Intelligence** view, the latter computing a live
-storage-cost estimate from Iceberg state and reconciling it against the native daily
-CloudWatch storage metric as that arrives.
+workload the table schema evolved from 15 to 16 fields (adding `co2_estimate_kg`), and the
+Dynatrace App captured that change in the same investigation experience as table growth,
+snapshot churn, maintenance, latency, and estimated cost.
 
-Scale and fidelity are real, not illustrative: 1.3M+ rows across continuous scheduled
-read/write workloads, ~20 ms average request latency, and zero 4xx/5xx errors in the
-verification windows. Current operational state and exact resource names are in
+Scale and fidelity are real, not illustrative: approximately **38.6 million rows across five
+tables and namespaces**, with continuous scheduled read/write workloads and sampled
+business-data aggregates. Current operational state and exact resource names are in
 [`STATUS.md`](STATUS.md).
-
-## Dashboards
-
-**Airline Data Lake — Operations.** Native `AWS/S3/Tables` request volume, latency, data
-transferred, and 4xx/5xx reliability, presented alongside live Iceberg state — rows, data
-files, snapshots, and schema field count — for the `airline-datalake-poc / ops / flights`
-table.
-
-![Operations dashboard — request volume, latency, data transferred, reliability, and live Iceberg state](docs/images/operations-dashboard.png)
-
-**FinOps & Intelligence.** Live Iceberg state and native request telemetry converted into
-operational cost estimates, with native request cost drivers, an airline-scale monthly
-storage projection, and current per-table intelligence.
-
-![FinOps and Intelligence dashboard — cost estimates, request cost drivers, storage projection, and table intelligence](docs/images/finops-dashboard.png)
 
 ## What is missing — and what Dynatrace should build
 
@@ -181,7 +163,7 @@ BLOG-DRAFT.md                               blog post draft
 STATUS.md                                   live POC state and resource names
 infra/                                      CloudFormation: S3 Tables, metric stream, loaders, dashboards
 poc/                                        PyIceberg loader, load generator, IRC collector, schema evolution
-dashboards/                                 Dynatrace Operations and FinOps dashboards
+dashboards/                                 early POC dashboard definitions (reference only; app is the product UX)
 research/
   integration-patterns.md                   how the integration works today vs. the IRC build
   dynatrace-s3-tables-data-points.md         authoritative AWS/S3/Tables metric catalog
