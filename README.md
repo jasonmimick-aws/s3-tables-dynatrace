@@ -158,6 +158,20 @@ shared collector and verified live (see [`integration/VERIFICATION.md`](integrat
 Build, test, and deploy runbook: [`BUILD.md`](BUILD.md). End-user guide:
 [`docs/app-user-guide.md`](docs/app-user-guide.md).
 
+### App experience
+
+**Overview** dynamically discovers the connected customer's tables and combines estate
+KPIs, current Iceberg metadata, contract-change awareness, and native AWS telemetry.
+Clicking any dataset opens a scoped investigation.
+
+![Amazon S3 Tables Observability Overview — estate KPIs, dataset catalog, changes, and native AWS telemetry](docs/images/app-overview-long.png)
+
+**Explore** keeps one dataset, any subset, or the full environment in scope while moving
+through Iceberg state, operational activity, sampled data profile, actual schema changes,
+and cost/capacity in one investigation flow.
+
+![Amazon S3 Tables Observability Explore — dataset scope, Iceberg state, metadata, and operational activity](docs/images/app-explore-long.png)
+
 ## Repository layout
 
 ```

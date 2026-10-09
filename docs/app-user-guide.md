@@ -12,6 +12,10 @@ bounded data aggregates. It helps platform, data, and FinOps teams answer:
 
 The app has only two destinations: **Overview** and **Explore**.
 
+![Overview — estate KPIs, discovered dataset catalog, contract changes, and native AWS telemetry](images/app-overview-long.png)
+
+![Explore — shared dataset scope, Iceberg metadata, and operational investigation](images/app-explore-long.png)
+
 ## Overview
 
 Overview is the environment-level starting point. It dynamically discovers tables from
