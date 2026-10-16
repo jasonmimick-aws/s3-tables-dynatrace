@@ -22,6 +22,8 @@ export const ExportPngButton = ({ filename }: { filename: string }) => {
         pixelRatio: 2,
         width,
         height,
+        filter: (domNode) =>
+          !(domNode instanceof HTMLElement && domNode.dataset.exportIgnore === "true"),
         style: {
           margin: "0",
           maxWidth: "none",
@@ -40,7 +42,13 @@ export const ExportPngButton = ({ filename }: { filename: string }) => {
   };
 
   return (
-    <button type="button" className="export-button" onClick={() => void capture()} disabled={state === "exporting"}>
+    <button
+      type="button"
+      className="export-button"
+      data-export-ignore="true"
+      onClick={() => void capture()}
+      disabled={state === "exporting"}
+    >
       {state === "exporting" ? "Rendering 2× PNG…" : state === "error" ? "Export failed · Retry" : "Export full PNG ↓"}
     </button>
   );

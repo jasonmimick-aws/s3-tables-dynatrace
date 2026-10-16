@@ -8,6 +8,15 @@ This solution has two independently deployable artifacts:
 2. **Dynatrace Extensions 2.0 package** (`integration/`) — collection: reads the S3 Tables
    Iceberg REST Catalog and reports metrics, events, and topology.
 
+## Current publication plan
+
+1. Package the validated AppEngine app and Extensions 2.0 collector as one solution.
+2. Erick Leon will connect the project team with a Dynatrace Solutions Architect to guide
+   private-environment installation, extension signing/distribution, and Hub requirements.
+3. Run a joint private pilot, close production-readiness gaps, and assemble the Hub listing
+   assets (documentation, screenshots, demo, security/data inventory, support model).
+4. Submit through the Dynatrace-supported Hub/technology-partner process.
+
 ## Stage 1 — local development (current)
 
 ```bash

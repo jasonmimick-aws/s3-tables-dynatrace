@@ -98,3 +98,13 @@ Daily storage and compaction CloudWatch metrics have not reached their reporting
 - Demo talk track + runbook: `DEMO.md`.
 - Repo pushed to GitLab: `gitlab.aws.dev/mimjasov/s3-tables-dynatrace`.
 - NOTE: Isengard creds expire ~daily — run `ada credentials update ...` before any live run.
+
+## Update — 2026-10-16: Hub packaging path
+
+- Product direction: package the AppEngine app + Extensions 2.0 IRC collector as one
+  Dynatrace Hub solution; the App is the proposed native customer experience (legacy
+  dashboards are engineering reference only).
+- Erick Leon will connect the team with a Dynatrace Solutions Architect to guide private
+  pilot installation, production signing/distribution, and the Hub publication process.
+- Final full-page app exports captured at 2× resolution: Overview 3228×4494 and Explore
+  3228×9756; embedded in README, blog, and user guide.
