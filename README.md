@@ -138,7 +138,8 @@ shared collector and verified live (see [`integration/VERIFICATION.md`](integrat
   build on.
 
 Build, test, and deploy runbook: [`BUILD.md`](BUILD.md). End-user guide:
-[`docs/app-user-guide.md`](docs/app-user-guide.md).
+[`docs/app-user-guide.md`](docs/app-user-guide.md). Hub publication readiness and SA review
+checklist: [`HUB-READINESS.md`](HUB-READINESS.md).
 
 ### App experience
 

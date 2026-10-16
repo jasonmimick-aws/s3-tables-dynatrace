@@ -17,6 +17,9 @@ This solution has two independently deployable artifacts:
    assets (documentation, screenshots, demo, security/data inventory, support model).
 4. Submit through the Dynatrace-supported Hub/technology-partner process.
 
+Detailed readiness review, production gaps, submission assets, SA questions, and proposed
+review agenda: [`HUB-READINESS.md`](HUB-READINESS.md).
+
 ## Stage 1 — local development (current)
 
 ```bash
