@@ -29,10 +29,11 @@
     "@dynatrace/strato-components": "^3.14.0",
     "@dynatrace/strato-design-tokens": "^1.7.1",
     "@dynatrace/strato-icons": "^2.6.1",
+    "html-to-image": "1.11.13",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-is": "^18.3.1",
     "react-intl": "7.1.14",
+    "react-is": "^18.3.1",
     "react-router-dom": "^6.30.6"
   },
   "overrides": {
@@ -47,12 +48,12 @@
     }
   },
   "devDependencies": {
-    "dt-app": "1.19.1",
     "@eslint/js": "^10.0.1",
     "@microsoft/eslint-plugin-sdl": "^1.1.0",
     "@types/node": "^24.13.3",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
+    "dt-app": "1.19.1",
     "eslint": "^10.10.0",
     "eslint-plugin-n": "^18.3.0",
     "eslint-plugin-no-secrets": "^2.3.3",

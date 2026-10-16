@@ -48,6 +48,13 @@ investigation can be bookmarked or shared.
 The section controls use in-page scrolling; they do not reload or route away from Explore.
 Use **How to use Explore** to show the inline quick-start guide.
 
+### Full-page PNG export
+
+Use **Export full PNG ↓** in the page header to capture the entire Overview or Explore
+content at 2× resolution. The exporter runs inside the application iframe, so it includes
+all sections below the viewport while excluding the surrounding Dynatrace shell and browser
+chrome. The PNG downloads through the browser.
+
 ### 1. Iceberg state
 
 Current IRC-derived metadata: rows, active files, snapshots, and table count. Clicking a

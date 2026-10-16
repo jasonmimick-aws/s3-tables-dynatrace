@@ -13,6 +13,7 @@ import {
   type DatasetRow,
 } from "../queries";
 import { describeDataset } from "../datasets";
+import { ExportPngButton } from "../components/ExportPngButton";
 
 const num = (value: unknown) =>
   value === null || value === undefined || Number.isNaN(Number(value))
@@ -31,7 +32,7 @@ export const Overview = () => {
         kicker="AMAZON S3 TABLES OBSERVABILITY"
         title="Operational intelligence for your Iceberg tables."
         description="Bring native AWS request telemetry together with Iceberg catalog metadata, data-level signals, change awareness, and cost—across every namespace and table discovered in the connected environment."
-        aside={<span>LIVE CATALOG · AWS TELEMETRY</span>}
+        aside={<div className="hero-tools"><span>LIVE CATALOG · AWS TELEMETRY</span><ExportPngButton filename="amazon-s3-tables-overview" /></div>}
       />
 
       <BentoGrid>

@@ -8,6 +8,7 @@ import { QueryState } from "../components/QueryState";
 import { ChartTile } from "../components/ChartTile";
 import { useDatasetCatalog } from "../hooks/useDatasetCatalog";
 import { datasetByKey } from "../datasets";
+import { ExportPngButton } from "../components/ExportPngButton";
 import {
   scopedCatalogQuery,
   scopedDataTotalsQuery,
@@ -100,7 +101,7 @@ export const Explore = () => {
         kicker="INVESTIGATION WORKSPACE"
         title="Explore tables, signals, changes, and cost."
         description="Select one dataset, compare any subset, or keep the full environment in scope. Every section below follows the same selection."
-        aside={<span>{selected.length === 0 ? "ALL DATASETS" : `${selected.length} DATASET${selected.length === 1 ? "" : "S"}`}</span>}
+        aside={<div className="hero-tools"><span>{selected.length === 0 ? "ALL DATASETS" : `${selected.length} DATASET${selected.length === 1 ? "" : "S"}`}</span><ExportPngButton filename="amazon-s3-tables-explore" /></div>}
       />
       <DatasetScope selected={selected} onChange={setScope} datasets={catalog.datasets} />
 

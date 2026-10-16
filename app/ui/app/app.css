@@ -327,3 +327,19 @@
 .guide-panel strong { color: var(--ink); }
 @media (max-width: 1000px) { .guide-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 620px) { .guide-panel { grid-template-columns: 1fr; } .section-nav .section-nav__guide { margin-left: 0; } }
+
+.hero-tools { display: flex; flex-direction: column; gap: 9px; align-items: flex-end; }
+.export-button {
+  padding: 8px 11px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 50%, transparent);
+  border-radius: 8px;
+  background: rgba(115,229,255,.08);
+  color: var(--cyan);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+}
+.export-button:hover { background: rgba(115,229,255,.14); }
+.export-button:disabled { cursor: wait; opacity: .65; }
+@media (max-width: 700px) { .hero-tools { align-items: flex-start; } }
